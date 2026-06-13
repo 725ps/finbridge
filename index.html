@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FinBridge | Al-Futtaim Automotive</title>
+<meta name="theme-color" content="#1B2A4A">
+<meta name="apple-mobile-web-app-title" content="FinBridge">
+<link rel="apple-touch-icon" href="assets/logos/finbridge-tile.png">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231B2A4A'/><path d='M5 22 L27 22 M10 22 L10 9 M22 22 L22 9' stroke='white' stroke-width='2' fill='none' stroke-linecap='round'/><path d='M5 17 Q10 10 16 16 Q22 22 27 8' stroke='%232563EB' stroke-width='2.2' fill='none' stroke-linecap='round'/><path d='M27 8 l-3.5 1 M27 8 l-1 3.5' stroke='%232563EB' stroke-width='2.2' fill='none' stroke-linecap='round'/></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -191,7 +194,26 @@ table{border-collapse:collapse;width:100%}
 
 /* Responsive */
 @media(max-width:1024px){.sb{width:64px}.sb .sb-brand,.sb .sb-title,.sb-item span:not(.ic),.sb-badge,.sb-ctx{display:none}.sb-hd{padding:16px 0;text-align:center}.sb-logo{margin:0 auto}.sb-item{justify-content:center;padding:12px 0}.mn{margin-left:64px}.hero{grid-template-columns:1fr}.twocol{grid-template-columns:1fr}}
-@media(max-width:600px){.sb{display:none}.mn{margin-left:0;padding:16px}.egrid{grid-template-columns:1fr}.stats{flex-direction:column}.hero-stats{grid-template-columns:1fr 1fr}.psel-menu{min-width:280px}}
+@media(max-width:600px){
+  .mobile-bar{display:flex}
+  .sb{width:260px;transform:translateX(-100%);box-shadow:none}
+  .sb .sb-brand,.sb .sb-title,.sb-item span:not(.ic),.sb-badge{display:inline}
+  .sb-item{justify-content:flex-start;padding:12px 20px}
+  .sb-item span:not(.ic){display:inline}
+  .sb.mobile-open{transform:translateX(0);box-shadow:0 0 40px rgba(0,0,0,0.4)}
+  .sb-backdrop{display:block}
+  .mn{margin-left:0;padding:16px;padding-top:64px}
+  .egrid{grid-template-columns:1fr}.stats{flex-direction:column}.hero-stats{grid-template-columns:1fr 1fr}.psel-menu{min-width:280px;max-width:calc(100vw - 40px)}
+  .sb-toggle{display:none}
+  .topbar{flex-direction:column;align-items:stretch;gap:10px}
+  .tb-left{width:100%}.tb-right{width:100%;justify-content:space-between}
+  .tb-search,.search{display:none}
+  .psel-menu{left:0;right:auto}
+}
+.mobile-bar{display:none;position:fixed;top:0;left:0;right:0;height:52px;background:var(--navy);z-index:45;align-items:center;gap:14px;padding:0 16px}
+.hamburger{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:4px 8px;line-height:1}
+.mobile-brand{font-size:18px;font-weight:800;letter-spacing:-0.5px}
+.sb-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:48}
 </style>
 </head>
 <body>
@@ -281,13 +303,13 @@ const InstPill=({inst})=>{
 };
 
 const ROLES=[
-  {id:"admin",name:"Platform Admin",scope:"Full access · can configure"},
   {id:"cfo",name:"Division CFO",scope:"All entities · executive view"},
   {id:"group",name:"Group Controller",scope:"All entities · consolidation"},
   {id:"close_mgr",name:"Close Manager",scope:"All entities · operations"},
   {id:"entity_ctrl",name:"Entity Controller",scope:"Toyota UAE only"},
   {id:"task_owner",name:"Task Owner",scope:"Omar · AP Manager · own tasks"},
   {id:"it_ops",name:"IT Operations",scope:"Systems only · no financials"},
+  {id:"admin",name:"Platform Admin",scope:"Full access · can configure"},
 ];
 
 const getEnt=id=>D.organizations.children[0].children.find(e=>e.id===id);
@@ -334,10 +356,10 @@ const NAV_BY_ROLE={
   task_owner: [{id:"cmd",ic:"✓",lb:"My Tasks"}],
   it_ops:     [{id:"flow",ic:"🔀",lb:"System Map"},{id:"cfg",ic:"⚙️",lb:"Configuration"}],
 };
-const Sidebar=({tab,onTab,col,onCol,roleId})=>{
+const Sidebar=({tab,onTab,col,onCol,roleId,mobileOpen})=>{
   const items=NAV_BY_ROLE[roleId]||NAV_BY_ROLE.cfo;
   return(
-  <div className={`sb${col?" col":""}`}>
+  <div className={`sb${col?" col":""}${mobileOpen?" mobile-open":""}`}>
     <div className="sb-hd">
       {col?(
         <img src="assets/logos/finbridge-white.png" alt="FinBridge" style={{width:40,height:40,objectFit:"contain",margin:"0 auto",display:"block"}} onError={e=>{e.target.outerHTML='<div style="width:36px;height:36px;border-radius:8px;background:#2563EB;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;margin:0 auto">F</div>'}}/>
@@ -1320,6 +1342,7 @@ const App=()=>{
   const[view,setView]=useState("overview");
   const[vd,setVD]=useState({});
   const[col,setCol]=useState(false);
+  const[mobileOpen,setMobileOpen]=useState(false);
   const[period,setPeriod]=useState(findInstance("PI-JUN")); // June default
   const[role,setRole]=useState(ROLES[0]); // CFO default
 
@@ -1342,9 +1365,16 @@ const App=()=>{
   const statusChip=period.status==="active"?{t:"On Pace",c:"var(--green)"}:period.status==="closed"||period.status==="completed"?{t:"Completed",c:"var(--green)"}:period.status==="in_progress"?{t:"In Progress",c:"var(--blue)"}:{t:"Upcoming",c:"var(--muted)"};
 
   return(<div className="app">
-    <Sidebar tab={tab} onTab={switchTab} col={col} onCol={()=>setCol(!col)} roleId={role.id}/>
+    {/* Mobile top bar with hamburger */}
+    <div className="mobile-bar">
+      <button className="hamburger" onClick={()=>setMobileOpen(true)} aria-label="Open menu">☰</button>
+      <div className="mobile-brand"><span style={{color:"#fff"}}>Fin</span><span style={{color:"#5B9BF5"}}>Bridge</span></div>
+    </div>
+    {/* Backdrop when drawer open */}
+    {mobileOpen&&<div className="sb-backdrop" onClick={()=>setMobileOpen(false)}/>}
+    <Sidebar tab={tab} onTab={t=>{switchTab(t);setMobileOpen(false)}} col={col} onCol={()=>setCol(!col)} roleId={role.id} mobileOpen={mobileOpen}/>
     <div className={`mn${col?" exp":""}`}>
-      <TopBar period={period} onPeriod={p=>{setPeriod(p);setView("overview")}} role={role} onRole={r=>{setRole(r);setView("overview");setTab((NAV_BY_ROLE[r.id]||NAV_BY_ROLE.cfo)[0].id)}}/>
+      <TopBar period={period} onPeriod={p=>{setPeriod(p);setView("overview")}} role={role} onRole={r=>{setRole(r);setView("overview");setTab((NAV_BY_ROLE[r.id]||NAV_BY_ROLE.cfo)[0].id);setMobileOpen(false)}}/>
 
       {tab==="cmd"&&view!=="overview"&&<div className="bc">
         {bc().map((b,i)=><React.Fragment key={i}>
