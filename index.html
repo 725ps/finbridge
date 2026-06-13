@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinBridge | Al-Futtaim Automotive</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231B2A4A'/><path d='M5 22 L27 22 M10 22 L10 9 M22 22 L22 9' stroke='white' stroke-width='2' fill='none' stroke-linecap='round'/><path d='M5 17 Q10 10 16 16 Q22 22 27 8' stroke='%232563EB' stroke-width='2.2' fill='none' stroke-linecap='round'/><path d='M27 8 l-3.5 1 M27 8 l-1 3.5' stroke='%232563EB' stroke-width='2.2' fill='none' stroke-linecap='round'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#1B2A4A;--navy-l:#243656;--blue:#2563EB;--blue-bg:#EFF6FF;--blue-bdr:#BFDBFE;--green:#059669;--green-bg:#ECFDF5;--green-bdr:#A7F3D0;--amber:#D97706;--amber-bg:#FFFBEB;--red:#DC2626;--red-bg:#FEF2F2;--red-bdr:#FECACA;--gray:#6B7280;--gray-bg:#F4F5F7;--gray-bdr:#E5E7EB;--muted:#9CA3AF;--text:#1A1A2E;--text2:#374151;--white:#FFFFFF;--r:12px;--rs:8px;--shadow:0 1px 3px rgba(0,0,0,0.06)}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--gray-bg);color:var(--text);-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5}
+button{font-family:inherit;cursor:pointer}
+table{border-collapse:collapse;width:100%}
+.app{display:flex;min-height:100vh}
+
+/* Sidebar */
+.sb{width:260px;background:var(--navy);color:#fff;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:50;transition:width 0.3s ease;overflow:hidden}
+.sb.col{width:64px}
+.sb-hd{padding:20px;border-bottom:1px solid rgba(255,255,255,0.08);min-height:80px}
+.sb-logo{height:28px;margin-bottom:6px;opacity:0.9}
+.sb-brand{font-size:10px;font-weight:700;color:#93C5FD;letter-spacing:2px;white-space:nowrap;overflow:hidden}
+.sb-title{font-size:15px;font-weight:700;margin-top:2px;white-space:nowrap;overflow:hidden}
+.sb-nav{flex:1;padding:12px 8px;overflow-y:auto}
+.sb-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--rs);margin-bottom:2px;cursor:pointer;transition:all 0.15s;font-size:13px;font-weight:500;color:rgba(255,255,255,0.65);white-space:nowrap}
+.sb-item:hover{background:rgba(255,255,255,0.08);color:#fff}
+.sb-item.act{background:rgba(255,255,255,0.12);color:#fff;font-weight:600}
+.sb-item.dis{opacity:0.3;cursor:default}
+.sb-item .ic{font-size:18px;flex-shrink:0;width:24px;text-align:center}
+.sb-badge{font-size:9px;background:var(--blue);padding:2px 8px;border-radius:4px;font-weight:700}
+.sb-ctx{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.08);font-size:12px;white-space:nowrap;overflow:hidden}
+.sb-ctx .lbl{color:#93C5FD;font-weight:700;font-size:10px;letter-spacing:1.5px;margin-bottom:8px}
+.sb-toggle{padding:12px;background:rgba(255,255,255,0.04);border:none;color:#94A3B8;font-size:13px;text-align:center;transition:all 0.15s;white-space:nowrap}
+.sb-toggle:hover{background:rgba(255,255,255,0.08)}
+
+/* Main */
+.mn{margin-left:260px;flex:1;padding:28px 36px;max-width:1200px;transition:margin-left 0.3s}
+.mn.exp{margin-left:64px}
+
+/* Cards & Components */
+.card{background:var(--white);border-radius:var(--r);border:1px solid var(--gray-bdr);padding:20px;transition:all 0.2s}
+.card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08)}
+.card-hd{font-size:12px;font-weight:700;color:var(--navy);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:14px}
+.stats{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+.stat{background:var(--white);border-radius:var(--r);padding:16px 20px;flex:1;min-width:130px;border-left:4px solid var(--navy)}
+.stat .v{font-size:26px;font-weight:800;line-height:1}
+.stat .l{font-size:11px;color:var(--gray);margin-top:4px;font-weight:500}
+.pill{display:inline-flex;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;letter-spacing:0.3px}
+.pill-closed{background:var(--green-bg);color:var(--green)}.pill-on_track{background:var(--blue-bg);color:var(--blue)}
+.pill-at_risk{background:var(--amber-bg);color:var(--amber)}.pill-blocked,.pill-overdue{background:var(--red-bg);color:var(--red)}
+.pill-completed{background:var(--green-bg);color:var(--green)}.pill-in_progress{background:var(--blue-bg);color:var(--blue)}
+.pill-waiting,.pill-not_started{background:#F3F4F6;color:var(--muted)}.pill-ready{background:#F5F3FF;color:#7C3AED}
+.pbar{width:100%;height:6px;background:#E5E7EB;border-radius:6px;overflow:hidden}
+.pfill{height:100%;border-radius:6px;transition:width 0.5s ease}
+.badge{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:800;flex-shrink:0}
+
+/* Entity Grid */
+.egrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.ecard{background:var(--white);border-radius:var(--r);padding:16px;border:1px solid var(--gray-bdr);cursor:pointer;transition:all 0.2s}
+.ecard:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08);border-color:var(--blue-bdr)}
+
+/* Tables */
+.dtbl{font-size:13px}
+.dtbl th{padding:8px 12px;text-align:left;font-weight:600;color:var(--gray);font-size:10px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid var(--gray-bdr)}
+.dtbl td{padding:10px 12px;border-bottom:1px solid #F3F4F6}
+.dtbl tr:hover{background:#FAFAFA}
+
+/* Sub-process rows */
+.spr{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F3F4F6;cursor:pointer;transition:background 0.15s}
+.spr:hover{background:#FAFAFA;margin:0 -8px;padding:10px 8px;border-radius:6px}
+
+/* Breadcrumb */
+.bc{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin-bottom:16px;flex-wrap:wrap}
+.bc a{color:var(--blue);cursor:pointer;font-weight:500;text-decoration:none}
+.bc a:hover{text-decoration:underline}
+.bc .cur{color:var(--text);font-weight:600}
+
+/* Flow */
+.fnode{position:absolute;border-radius:10px;padding:12px 10px;text-align:center;cursor:pointer;transition:all 0.2s;z-index:2}
+.fnode:hover{transform:scale(1.05);box-shadow:0 4px 16px rgba(0,0,0,0.12)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--rs);font-size:12px;font-weight:600;border:none;transition:all 0.15s}
+.btn-p{background:var(--navy);color:#fff}.btn-p:hover{background:var(--navy-l)}
+.btn-o{background:transparent;border:1px solid var(--gray-bdr);color:var(--text)}.btn-o:hover{background:#F3F4F6}
+.btn-g{background:var(--green);color:#fff}
+.btn-full{width:100%;justify-content:center;padding:12px}
+
+/* Blocker */
+.blocker{background:var(--red-bg);border-radius:var(--r);padding:16px;border:1px solid var(--red-bdr);margin-bottom:16px}
+.resolution{background:var(--green-bg);border-radius:var(--rs);padding:14px;border:1px solid var(--green-bdr);margin-bottom:12px}
+
+/* Info */
+.info{border-radius:var(--rs);padding:14px;margin:16px 0;font-size:13px;line-height:1.6;background:var(--blue-bg);border:1px solid var(--blue-bdr);color:#1E3A5F}
+
+/* Bar chart */
+.bars{display:flex;align-items:flex-end;gap:6px;height:130px}
+.bcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.bar{width:100%;border-radius:4px 4px 0 0;transition:height 0.5s;min-height:2px}
+
+/* Config tabs */
+.ctabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+.ctab{padding:8px 16px;border-radius:var(--rs);border:none;font-size:13px;font-weight:600;transition:all 0.15s}
+.ctab.act{background:var(--navy);color:#fff}
+.ctab:not(.act){background:#F3F4F6;color:var(--gray)}
+.ctab:not(.act):hover{background:#E5E7EB}
+
+/* Instance tree */
+.irow{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:var(--rs);margin-bottom:3px;cursor:pointer;transition:all 0.15s}
+.irow:hover{background:#F3F4F6}
+.irow.act{background:var(--blue-bg);border:1px solid var(--blue-bdr)}
+
+/* Wizard steps */
+.wstep{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+.wdot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.wdot.done{background:var(--green);color:#fff}
+.wdot.cur{background:var(--blue);color:#fff}
+.wdot.pend{background:#E5E7EB;color:var(--muted)}
+.wline{flex:1;height:2px;background:#E5E7EB}
+
+/* Pace chart */
+.pace{position:relative;height:160px;background:var(--white);border-radius:var(--r);border:1px solid var(--gray-bdr);padding:20px;margin-bottom:20px}
+.pace-grid{position:absolute;inset:40px 20px 30px 40px;display:flex;flex-direction:column;justify-content:space-between}
+.pace-line{width:100%;height:1px;background:#F3F4F6}
+.pace-labels{position:absolute;bottom:8px;left:40px;right:20px;display:flex;justify-content:space-between;font-size:10px;color:var(--muted)}
+.pace-ylabels{position:absolute;top:40px;bottom:30px;left:4px;display:flex;flex-direction:column;justify-content:space-between;font-size:10px;color:var(--muted);text-align:right;width:30px}
+
+/* Collapsed sidebar - center icons cleanly */
+.sb.col .sb-hd{padding:16px 0;text-align:center}
+.sb.col .sb-logo{margin:0 auto 0}
+.sb.col .sb-item{justify-content:center;padding:12px 0;gap:0}
+.sb.col .sb-item .ic{width:auto}
+.sb.col .sb-nav{padding:12px 6px}
+
+/* Top header bar */
+.topbar{display:flex;align-items:center;justify-content:space-between;background:var(--white);border-radius:var(--r);border:1px solid var(--gray-bdr);padding:14px 20px;margin-bottom:20px;gap:16px;flex-wrap:wrap}
+.tb-left{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.tb-right{display:flex;align-items:center;gap:12px}
+
+/* Period selector dropdown */
+.psel{position:relative}
+.psel-btn{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--navy);color:#fff;border:none;border-radius:var(--rs);font-size:14px;font-weight:600}
+.psel-btn:hover{background:var(--navy-l)}
+.psel-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--white);border:1px solid var(--gray-bdr);border-radius:var(--r);box-shadow:0 8px 30px rgba(0,0,0,0.12);z-index:100;min-width:340px;padding:8px;max-height:480px;overflow-y:auto}
+
+/* Role selector */
+.rsel{position:relative}
+.rsel-btn{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--gray-bg);border:1px solid var(--gray-bdr);border-radius:var(--rs);font-size:13px;font-weight:600;color:var(--text2)}
+.rsel-btn:hover{background:#E5E7EB}
+.rsel-menu{position:absolute;top:calc(100% + 6px);right:0;background:var(--white);border:1px solid var(--gray-bdr);border-radius:var(--r);box-shadow:0 8px 30px rgba(0,0,0,0.12);z-index:100;min-width:220px;padding:6px}
+.rsel-item{padding:9px 12px;border-radius:6px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.rsel-item:hover{background:var(--gray-bg)}
+.rsel-item.act{background:var(--blue-bg);color:var(--blue);font-weight:600}
+
+/* Search */
+.search{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--gray-bg);border:1px solid var(--gray-bdr);border-radius:var(--rs);font-size:13px;color:var(--muted);min-width:180px}
+
+/* Context strip */
+.ctxstrip{display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.ctxstrip .title{font-size:22px;font-weight:800}
+.ctxstrip .chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:var(--white);border:1px solid var(--gray-bdr);border-radius:20px;font-size:12px;font-weight:500;color:var(--text2)}
+
+/* Circular progress */
+.ring-wrap{display:flex;align-items:center;justify-content:center}
+.ring-label{font-size:11px;color:var(--gray);text-align:center;margin-top:4px;font-weight:500}
+
+/* Hero layout */
+.hero{display:grid;grid-template-columns:1fr 200px;gap:16px;margin-bottom:20px}
+.hero-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hero-ring{background:var(--white);border-radius:var(--r);border:1px solid var(--gray-bdr);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+
+/* Two column */
+.twocol{display:grid;grid-template-columns:1fr 380px;gap:16px;margin-bottom:20px}
+
+/* Blocker list item */
+.blk-item{display:flex;align-items:flex-start;gap:10px;padding:12px;border-radius:8px;background:var(--red-bg);border:1px solid var(--red-bdr);margin-bottom:8px;cursor:pointer;transition:all 0.15s}
+.blk-item:hover{box-shadow:0 2px 8px rgba(220,38,38,0.15)}
+
+/* Filters */
+.filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.fbtn{padding:6px 14px;border-radius:20px;border:1px solid var(--gray-bdr);background:var(--white);font-size:12px;font-weight:600;color:var(--gray);transition:all 0.15s}
+.fbtn.act{background:var(--navy);color:#fff;border-color:var(--navy)}
+.fdrop{padding:6px 12px;border-radius:8px;border:1px solid var(--gray-bdr);background:var(--white);font-size:12px;font-weight:500;color:var(--text2)}
+
+/* Tooltip for collapsed */
+.tip{position:relative}
+
+/* Responsive */
+@media(max-width:1024px){.sb{width:64px}.sb .sb-brand,.sb .sb-title,.sb-item span:not(.ic),.sb-badge,.sb-ctx{display:none}.sb-hd{padding:16px 0;text-align:center}.sb-logo{margin:0 auto}.sb-item{justify-content:center;padding:12px 0}.mn{margin-left:64px}.hero{grid-template-columns:1fr}.twocol{grid-template-columns:1fr}}
+@media(max-width:600px){.sb{display:none}.mn{margin-left:0;padding:16px}.egrid{grid-template-columns:1fr}.stats{flex-direction:column}.hero-stats{grid-template-columns:1fr 1fr}.psel-menu{min-width:280px}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="js/data.js"></script>
+<script type="text/babel">
+const {useState,useMemo,useCallback}=React;
+const D=window.FINOPS_DATA;
+
+// === HELPERS ===
+const SL={closed:"Closed",on_track:"On Track",at_risk:"At Risk",blocked:"Blocked",overdue:"Overdue",not_started:"Not Started",completed:"Done",in_progress:"In Progress",ready:"Ready",waiting:"Waiting"};
+const SC={completed:"var(--green)",closed:"var(--green)",in_progress:"var(--blue)",on_track:"var(--blue)",at_risk:"var(--amber)",blocked:"var(--red)",overdue:"var(--red)"};
+const Pill=({s})=><span className={`pill pill-${s}`}>{SL[s]||s}</span>;
+const PBar=({pct,color,h=6})=><div className="pbar" style={{height:h}}><div className="pfill" style={{width:`${Math.min(pct,100)}%`,background:color||SC[pct>=100?"completed":pct>0?"in_progress":"not_started"]}} /></div>;
+
+const Badge=({brandId,size=40})=>{
+  const b=D.brands[brandId];
+  const[err,setErr]=useState(false);
+  if(!b)return null;
+  const f=b.name.toLowerCase()+".png";
+  return err?<div className="badge" style={{width:size,height:size,background:b.color,fontSize:size*0.42}}>{b.initial}</div>
+    :<img src={`assets/logos/${f}`} alt={b.name} style={{width:size,height:size,objectFit:"contain",flexShrink:0}} onError={()=>setErr(true)}/>;
+};
+
+// Circular progress ring
+const Ring=({pct,size=120,stroke=10})=>{
+  const r=(size-stroke)/2,c=2*Math.PI*r,off=c-(pct/100)*c;
+  const col=pct>=100?"var(--green)":pct>=60?"var(--blue)":pct>=30?"var(--amber)":"var(--red)";
+  return(<svg width={size} height={size}>
+    <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#E5E7EB" strokeWidth={stroke}/>
+    <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={col} strokeWidth={stroke} strokeDasharray={c} strokeDashoffset={off} strokeLinecap="round" transform={`rotate(-90 ${size/2} ${size/2})`} style={{transition:"stroke-dashoffset 0.6s ease"}}/>
+    <text x="50%" y="50%" textAnchor="middle" dy="0.1em" fontSize={size*0.26} fontWeight="800" fill="var(--text)">{pct}%</text>
+    <text x="50%" y="50%" textAnchor="middle" dy="1.5em" fontSize={size*0.1} fill="var(--muted)">complete</text>
+  </svg>);
+};
+
+// Process types - only Financial Close active, others show the vision
+const PROCESS_TYPES=[
+  {id:"close",name:"Financial Close",icon:"📋",active:true},
+  {id:"budget",name:"Budgeting & Planning",icon:"📈",active:false},
+  {id:"audit",name:"Audit Process",icon:"🔍",active:false},
+  {id:"tax",name:"Tax Compliance",icon:"🧾",active:false},
+  {id:"treasury",name:"Treasury Operations",icon:"🏦",active:false},
+];
+
+// Hierarchical instance tree: Year → Quarter → Month
+const INSTANCE_HIERARCHY=[
+  {id:"PI-FY2026",label:"FY2026 Annual Close",shortLabel:"2026",type:"annual",status:"in_progress",pct:42,
+   children:[
+    {id:"PI-Q1",label:"Q1 2026 Quarterly Close",shortLabel:"Q1 2026",type:"quarterly",status:"completed",pct:100,parent:"FY2026 Annual Close",
+     children:[
+      {id:"PI-JAN",label:"January 2026 Monthly Close",shortLabel:"January",type:"monthly",status:"closed",pct:100,closeDays:4,parent:"Q1 2026"},
+      {id:"PI-FEB",label:"February 2026 Monthly Close",shortLabel:"February",type:"monthly",status:"closed",pct:100,closeDays:5,parent:"Q1 2026"},
+      {id:"PI-MAR",label:"March 2026 Monthly Close",shortLabel:"March",type:"monthly",status:"closed",pct:100,closeDays:4,parent:"Q1 2026"},
+     ]},
+    {id:"PI-Q2",label:"Q2 2026 Quarterly Close",shortLabel:"Q2 2026",type:"quarterly",status:"in_progress",pct:78,parent:"FY2026 Annual Close",
+     children:[
+      {id:"PI-APR",label:"April 2026 Monthly Close",shortLabel:"April",type:"monthly",status:"closed",pct:100,closeDays:5,parent:"Q2 2026"},
+      {id:"PI-MAY",label:"May 2026 Monthly Close",shortLabel:"May",type:"monthly",status:"closed",pct:100,closeDays:4,parent:"Q2 2026"},
+      {id:"PI-JUN",label:"June 2026 Monthly Close",shortLabel:"June",type:"monthly",status:"active",pct:58,currentDay:3,parent:"Q2 2026",active:true},
+     ]},
+    {id:"PI-Q3",label:"Q3 2026 Quarterly Close",shortLabel:"Q3 2026",type:"quarterly",status:"upcoming",pct:0,parent:"FY2026 Annual Close",children:[
+      {id:"PI-JUL",label:"July 2026 Monthly Close",shortLabel:"July",type:"monthly",status:"upcoming",pct:0,parent:"Q3 2026"},
+      {id:"PI-AUG",label:"August 2026 Monthly Close",shortLabel:"August",type:"monthly",status:"upcoming",pct:0,parent:"Q3 2026"},
+      {id:"PI-SEP",label:"September 2026 Monthly Close",shortLabel:"September",type:"monthly",status:"upcoming",pct:0,parent:"Q3 2026"},
+    ]},
+    {id:"PI-Q4",label:"Q4 2026 Quarterly Close",shortLabel:"Q4 2026",type:"quarterly",status:"upcoming",pct:0,parent:"FY2026 Annual Close",children:[
+      {id:"PI-OCT",label:"October 2026 Monthly Close",shortLabel:"October",type:"monthly",status:"upcoming",pct:0,parent:"Q4 2026"},
+      {id:"PI-NOV",label:"November 2026 Monthly Close",shortLabel:"November",type:"monthly",status:"upcoming",pct:0,parent:"Q4 2026"},
+      {id:"PI-DEC",label:"December 2026 Monthly Close",shortLabel:"December",type:"monthly",status:"upcoming",pct:0,parent:"Q4 2026"},
+    ]},
+   ]},
+];
+
+// Flatten for lookup
+const flattenInstances=(nodes,acc=[])=>{nodes.forEach(n=>{acc.push(n);if(n.children)flattenInstances(n.children,acc)});return acc};
+const ALL_INSTANCES=flattenInstances(INSTANCE_HIERARCHY);
+const findInstance=id=>ALL_INSTANCES.find(i=>i.id===id);
+
+// Standardized status labels
+const INST_STATUS={completed:"Completed",closed:"Completed",in_progress:"In Progress",active:"Active",upcoming:"Upcoming",archived:"Archived"};
+const instStatusColor=s=>({completed:"var(--green)",closed:"var(--green)",in_progress:"var(--blue)",active:"var(--blue)",upcoming:"var(--muted)",archived:"var(--muted)"})[s]||"var(--muted)";
+const InstPill=({inst})=>{
+  const lbl=inst.status==="active"?`Active · Day ${inst.currentDay}`:inst.status==="closed"?`Completed · ${inst.closeDays}d`:inst.status==="in_progress"?`In Progress · ${inst.pct}%`:INST_STATUS[inst.status];
+  const col=instStatusColor(inst.status);
+  return <span style={{fontSize:10,fontWeight:700,padding:"3px 10px",borderRadius:20,background:col+"1A",color:col,whiteSpace:"nowrap"}}>{lbl}</span>;
+};
+
+const ROLES=[
+  {id:"admin",name:"Platform Admin",scope:"Full access · can configure"},
+  {id:"cfo",name:"Division CFO",scope:"All entities · executive view"},
+  {id:"group",name:"Group Controller",scope:"All entities · consolidation"},
+  {id:"close_mgr",name:"Close Manager",scope:"All entities · operations"},
+  {id:"entity_ctrl",name:"Entity Controller",scope:"Toyota UAE only"},
+  {id:"task_owner",name:"Task Owner",scope:"Omar · AP Manager · own tasks"},
+  {id:"it_ops",name:"IT Operations",scope:"Systems only · no financials"},
+];
+
+const getEnt=id=>D.organizations.children[0].children.find(e=>e.id===id);
+const getES=id=>D.entityStatuses.find(e=>e.id===id);
+const bn=id=>D.brands[id]?.name||id;
+const cn=id=>D.countries[id]?.name||id;
+const cf=id=>D.countries[id]?.flag||"";
+const sn=id=>D.systems.find(s=>s.id===id)?.name||id;
+const getSP=id=>D.processTemplates[0].subProcesses.find(sp=>sp.id===id);
+
+// Enrichment + reverse-link helpers
+const getPerson=id=>D.people.find(p=>p.id===id);
+const allTaskTemplates=()=>{
+  const out=[];
+  D.processTemplates.forEach(pt=>{
+    (pt.subProcesses||[]).forEach(sp=>(sp.tasks||[]).forEach(t=>out.push({...t,spName:sp.name,systemId:sp.systemId})));
+    (pt.additionalSubProcesses||[]).forEach(sp=>(sp.tasks||[]).forEach(t=>out.push({...t,spName:sp.name,systemId:sp.systemId})));
+  });
+  return out;
+};
+const taskNameById=id=>{const t=allTaskTemplates().find(x=>x.id===id);return t?t.name:id;};
+const tasksBlockedBy=tid=>allTaskTemplates().filter(t=>(t.dependsOn||[]).includes(tid)).map(t=>t.name);
+const enrich=tid=>D.taskEnrichment?.[tid];
+const tasksAssignedTo=personId=>allTaskTemplates().filter(t=>enrich(t.id)?.assignee===personId);
+const tasksUsingSystem=sysId=>allTaskTemplates().filter(t=>{const e=enrich(t.id);if(!e)return false;return[...(e.reads||[]),...(e.writes||[])].some(x=>x.sys===sysId);});
+
+// Generate sub-process statuses for any entity
+const genSPS=(es)=>{
+  if(es.subProcessStatuses)return es.subProcessStatuses;
+  return D.processTemplates[0].subProcesses.map(sp=>({
+    id:sp.id,
+    status:es.status==="closed"?"completed":sp.phase<=1?"completed":sp.phase<=2?(es.pct>40?"in_progress":"not_started"):"waiting",
+    pct:es.status==="closed"?100:sp.phase<=1?100:sp.phase<=2?Math.max(0,Math.round((es.pct-20)*2)):0,
+  }));
+};
+
+// === SIDEBAR ===
+const NAV_BY_ROLE={
+  admin:      [{id:"cmd",ic:"📊",lb:"Command Center"},{id:"flow",ic:"🔀",lb:"System Map"},{id:"dag",ic:"🔗",lb:"Process DAG"},{id:"cfg",ic:"⚙️",lb:"Configuration"},{id:"ai",ic:"🤖",lb:"AI Intelligence",dis:true,badge:"Phase 2"}],
+  cfo:        [{id:"cmd",ic:"📊",lb:"Command Center"},{id:"flow",ic:"🔀",lb:"System Map"},{id:"dag",ic:"🔗",lb:"Process DAG"},{id:"cfg",ic:"⚙️",lb:"Configuration"},{id:"ai",ic:"🤖",lb:"AI Intelligence",dis:true,badge:"Phase 2"}],
+  group:      [{id:"cmd",ic:"✅",lb:"Consolidation"},{id:"dag",ic:"🔗",lb:"Process DAG"},{id:"flow",ic:"🔀",lb:"System Map"},{id:"cfg",ic:"⚙️",lb:"Configuration"}],
+  close_mgr:  [{id:"cmd",ic:"🎯",lb:"Close Operations"},{id:"dag",ic:"🔗",lb:"Process DAG"},{id:"flow",ic:"🔀",lb:"System Map"},{id:"cfg",ic:"⚙️",lb:"Configuration"}],
+  entity_ctrl:[{id:"cmd",ic:"🏢",lb:"My Entity"},{id:"dag",ic:"🔗",lb:"Process DAG"}],
+  task_owner: [{id:"cmd",ic:"✓",lb:"My Tasks"}],
+  it_ops:     [{id:"flow",ic:"🔀",lb:"System Map"},{id:"cfg",ic:"⚙️",lb:"Configuration"}],
+};
+const Sidebar=({tab,onTab,col,onCol,roleId})=>{
+  const items=NAV_BY_ROLE[roleId]||NAV_BY_ROLE.cfo;
+  return(
+  <div className={`sb${col?" col":""}`}>
+    <div className="sb-hd">
+      {col?(
+        <img src="assets/logos/finbridge-white.png" alt="FinBridge" style={{width:40,height:40,objectFit:"contain",margin:"0 auto",display:"block"}} onError={e=>{e.target.outerHTML='<div style="width:36px;height:36px;border-radius:8px;background:#2563EB;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;margin:0 auto">F</div>'}}/>
+      ):(<>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+          <img src="assets/logos/finbridge-white.png" alt="" style={{width:38,height:38,objectFit:"contain",flexShrink:0}} onError={e=>{e.target.style.display='none'}}/>
+          <div style={{fontSize:20,fontWeight:800,letterSpacing:"-0.5px"}}><span style={{color:"#fff"}}>Fin</span><span style={{color:"#5B9BF5"}}>Bridge</span></div>
+        </div>
+        <div className="sb-brand">AL-FUTTAIM AUTOMOTIVE</div>
+        <div style={{fontSize:10,color:"#94A3B8",marginTop:2}}>Finance Process Orchestration</div>
+      </>)}
+    </div>
+    <nav className="sb-nav">
+      {items.map(i=>(
+        <div key={i.id} className={`sb-item${tab===i.id?" act":""}${i.dis?" dis":""}`} onClick={()=>!i.dis&&onTab(i.id)} title={col?i.lb:""}>
+          <span className="ic">{i.ic}</span>{!col&&<span>{i.lb}</span>}
+          {!col&&i.badge&&<span className="sb-badge">{i.badge}</span>}
+        </div>
+      ))}
+    </nav>
+    <button className="sb-toggle" onClick={onCol}>{col?"▸":"◂ Collapse"}</button>
+  </div>
+)};
+
+// === PACE CHART (data-driven) ===
+// Computes cumulative planned vs actual task completion from D.pace.
+// Same logic ports directly to backend: planned[i] = sum(planByBucket[0..i]), actual[i] = sum(actualByBucket[0..i]).
+const computePace=(periodId,periodType)=>{
+  const planDef=D.pace[periodType];
+  if(!planDef)return null;
+  const planArr=planDef.planByDay||planDef.planByWindow;
+  const total=planArr.reduce((a,b)=>a+b,0);
+  const planCum=[];let s=0;planArr.forEach(v=>{s+=v;planCum.push(Math.round(s/total*100))});
+
+  const act=D.pace.actuals[periodId];
+  const actArr=(act&&act.arr)||[];
+  const actCum=[];let s2=0;actArr.forEach(v=>{s2+=v;actCum.push(Math.round(s2/total*100))});
+  const stopIdx=act?(act.closeIndex!==undefined?act.closeIndex:act.currentIndex):-1;
+
+  return{planCum,actCum,xLabels:planDef.xLabels,stopIdx,total,isClosed:act&&act.closeIndex!==undefined};
+};
+
+const PaceChart=({periodId,periodType,statusNote})=>{
+  const pace=computePace(periodId,periodType);
+  if(!pace)return null;
+  const{planCum,actCum,xLabels,stopIdx,isClosed}=pace;
+  const n=planCum.length;
+  const xAt=i=>n>1?(i/(n-1))*100:50;
+
+  // Planned curve points (gold) - always full span ending at 100%
+  const planPts=[`0,100`,...planCum.map((p,i)=>`${xAt(i)},${100-p}`)].join(" ");
+  // Actual curve points (blue/green) - only up to stopIdx
+  const actPoints=actCum.slice(0,stopIdx+1);
+  const aLine=[`0,100`,...actPoints.map((p,i)=>`${xAt(i)},${100-p}`)].join(" ");
+  const lastX=actPoints.length?xAt(actPoints.length-1):0;
+  const lastY=actPoints.length?100-actPoints[actPoints.length-1]:100;
+  const aFill=`0,100 ${actPoints.map((p,i)=>`${xAt(i)},${100-p}`).join(" ")} ${lastX},100`;
+  const col=isClosed?"#059669":"#2563EB";
+
+  return(<div className="card">
+    <div className="card-hd">Close Pace{statusNote?` · ${statusNote}`:""}</div>
+    <div style={{position:"relative",height:180}}>
+      <div style={{position:"absolute",top:0,bottom:30,left:0,width:32,display:"flex",flexDirection:"column",justifyContent:"space-between",fontSize:10,color:"var(--muted)",textAlign:"right",paddingRight:6}}>
+        <span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span>
+      </div>
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{position:"absolute",left:32,right:0,top:0,bottom:30,width:"calc(100% - 32px)",height:"calc(100% - 30px)"}}>
+        {[0,25,50,75,100].map(y=><line key={y} x1="0" y1={y} x2="100" y2={y} stroke="#F3F4F6" strokeWidth="0.5"/>)}
+        {n>2&&xLabels.map((_,i)=><line key={i} x1={xAt(i)} y1="0" x2={xAt(i)} y2="100" stroke="#FAFAFA" strokeWidth="0.5"/>)}
+        {actPoints.length>0&&<polygon points={aFill} fill={isClosed?"rgba(5,150,105,0.12)":"rgba(37,99,235,0.12)"}/>}
+        <polyline points={planPts} fill="none" stroke="#D97706" strokeWidth="1.2" strokeDasharray="3,2" vectorEffect="non-scaling-stroke"/>
+        {actPoints.length>0&&<polyline points={aLine} fill="none" stroke={col} strokeWidth="1.8" vectorEffect="non-scaling-stroke"/>}
+        {actPoints.length>0&&<circle cx={lastX} cy={lastY} r="2.2" fill={col} vectorEffect="non-scaling-stroke"/>}
+      </svg>
+      <div style={{position:"absolute",bottom:0,left:32,right:0,display:"flex",justifyContent:"space-between",fontSize:9,color:"var(--muted)"}}>
+        {xLabels.map(d=><span key={d} style={{flex:1,textAlign:"center"}}>{d}</span>)}
+      </div>
+    </div>
+    <div style={{display:"flex",gap:16,marginTop:12,fontSize:11}}>
+      <span style={{display:"flex",alignItems:"center",gap:5}}><span style={{width:12,height:2,background:"#D97706",display:"inline-block"}}/>Planned (Target)</span>
+      <span style={{display:"flex",alignItems:"center",gap:5}}><span style={{width:12,height:2,background:col,display:"inline-block"}}/>{isClosed?"Completed":"Actual"}</span>
+    </div>
+  </div>);
+};
+
+
+// === CLOSE OVERVIEW (with filters) ===
+const Overview=({onEntClick,onBlockerClick,roleId,closed,periodId,periodType,statusNote})=>{
+  const[filter,setFilter]=useState("all");
+  const[brandF,setBrandF]=useState("all");
+  const[countryF,setCountryF]=useState("all");
+
+  // RBAC: entity controller sees only Toyota UAE
+  let base=D.entityStatuses;
+  if(roleId==="entity_ctrl")base=base.filter(e=>e.id==="TOY-UAE");
+  // If period is closed, all entities show as closed
+  if(closed)base=base.map(e=>({...e,status:"closed",pct:100,tasksDone:e.tasksTotal,blocker:null}));
+
+  const c=useMemo(()=>{const r={closed:0,on_track:0,at_risk:0};base.forEach(e=>{r[e.status==="closed"?"closed":e.status==="at_risk"?"at_risk":"on_track"]++});return r},[base]);
+  const blockers=base.filter(e=>e.blocker);
+
+  const filtered=useMemo(()=>{
+    let f=[...base];
+    if(filter!=="all")f=f.filter(e=>e.status===filter);
+    if(brandF!=="all")f=f.filter(e=>getEnt(e.id)?.brand===brandF);
+    if(countryF!=="all")f=f.filter(e=>getEnt(e.id)?.country===countryF);
+    return f.sort((a,b)=>{const o={at_risk:0,on_track:1,closed:2};return(o[a.status]??1)-(o[b.status]??1)});
+  },[base,filter,brandF,countryF]);
+
+  const overallPct=closed?100:Math.round(base.reduce((a,e)=>a+e.pct,0)/base.length);
+  const totalTasks=base.reduce((a,e)=>a+e.tasksTotal,0);
+  const doneTasks=base.reduce((a,e)=>a+e.tasksDone,0);
+
+  return(<div>
+    {/* Hero: stats + ring */}
+    <div className="hero">
+      <div className="hero-stats">
+        <div className="stat" style={{borderLeftColor:"var(--green)"}}><div className="v">{c.closed}</div><div className="l">Entities Closed</div></div>
+        <div className="stat" style={{borderLeftColor:"var(--blue)"}}><div className="v">{c.on_track}</div><div className="l">On Track</div></div>
+        <div className="stat" style={{borderLeftColor:"var(--amber)"}}><div className="v">{c.at_risk}</div><div className="l">At Risk</div></div>
+        <div className="stat" style={{borderLeftColor:"var(--navy)"}}><div className="v">{doneTasks}<span style={{fontSize:14,color:"var(--muted)"}}>/{totalTasks}</span></div><div className="l">Tasks Complete</div></div>
+      </div>
+      <div className="hero-ring"><Ring pct={overallPct} size={130}/><div className="ring-label">Overall Close Progress</div></div>
+    </div>
+
+    {/* Two column: pace + blockers */}
+    <div className="twocol">
+      <PaceChart periodId={periodId} periodType={periodType} statusNote={statusNote}/>
+      <div className="card">
+        <div className="card-hd" style={{color:closed?"var(--green)":"var(--red)"}}>{closed?"✓ No Blockers — Closed Clean":`⚠ Blockers Needing Action (${blockers.length})`}</div>
+        {blockers.length===0?<div style={{fontSize:13,color:"var(--muted)",padding:"20px 0",textAlign:"center"}}>{closed?"This period closed with no outstanding blockers.":"No blockers. All clear."}</div>
+        :blockers.map(es=>{const e=getEnt(es.id);return(
+          <div key={es.id} className="blk-item" onClick={()=>onBlockerClick(es.id)}>
+            <Badge brandId={e.brand} size={28}/>
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:700}}>{bn(e.brand)} {cn(e.country)}</div>
+              <div style={{fontSize:11,color:"#7F1D1D",marginTop:2,lineHeight:1.4}}>{es.blocker.task}: {es.blocker.desc.substring(0,60)}...</div>
+            </div>
+          </div>
+        )})}
+      </div>
+    </div>
+
+    {/* Filters */}
+    <div className="filters">
+      {[["all","All"],["at_risk","At Risk"],["on_track","On Track"],["closed","Closed"]].map(([k,l])=>(
+        <button key={k} className={`fbtn${filter===k?" act":""}`} onClick={()=>setFilter(k)}>{l}</button>
+      ))}
+      <div style={{flex:1}}/>
+      <select className="fdrop" value={brandF} onChange={e=>setBrandF(e.target.value)}>
+        <option value="all">All Brands</option>
+        {Object.entries(D.brands).map(([k,b])=><option key={k} value={k}>{b.name}</option>)}
+      </select>
+      <select className="fdrop" value={countryF} onChange={e=>setCountryF(e.target.value)}>
+        <option value="all">All Countries</option>
+        {Object.entries(D.countries).map(([k,c])=><option key={k} value={k}>{c.name}</option>)}
+      </select>
+    </div>
+
+    {/* Entity grid */}
+    <div className="egrid">{filtered.map(es=>{const e=getEnt(es.id);if(!e)return null;return(
+      <div key={es.id} className="ecard" onClick={()=>onEntClick(es.id)}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+          <Badge brandId={e.brand} size={48}/>
+          <div style={{flex:1}}><div style={{fontSize:14,fontWeight:700}}>{bn(e.brand)} {cn(e.country)}</div>
+          <div style={{fontSize:11,color:"var(--muted)"}}>{cf(e.country)} {D.countries[e.country]?.currency} • {es.tasksDone}/{es.tasksTotal} tasks</div></div>
+          <Pill s={es.status}/>
+        </div>
+        <PBar pct={es.pct} color={SC[es.status]}/>
+        {es.blocker&&<div style={{marginTop:8,fontSize:11,color:"var(--red)",background:"var(--red-bg)",padding:"6px 10px",borderRadius:6,lineHeight:1.4}}>⚠ {es.blocker.desc.substring(0,90)}...</div>}
+      </div>
+    )})}</div>
+    {filtered.length===0&&<div style={{padding:40,textAlign:"center",color:"var(--muted)"}}>No entities match the selected filters.</div>}
+  </div>);
+};
+
+// === ENTITY DETAIL ===
+const EntDetail=({eid,nav})=>{
+  const e=getEnt(eid),es=getES(eid);
+  if(!e||!es)return<div style={{padding:40,textAlign:"center",color:"var(--muted)"}}>Entity not found</div>;
+  const sps=genSPS(es);
+  const p1=sps.filter(s=>getSP(s.id)?.phase===1),p2=sps.filter(s=>getSP(s.id)?.phase===2),p3=sps.filter(s=>getSP(s.id)?.phase===3),p4=sps.filter(s=>getSP(s.id)?.phase===4);
+  const phasePct=(arr)=>arr.length?Math.round(arr.reduce((a,s)=>a+s.pct,0)/arr.length):0;
+  const phases=[{n:1,l:"Sub-Ledger Close",p:phasePct(p1)},{n:2,l:"General Ledger Close",p:phasePct(p2)},{n:3,l:"Entity Close",p:phasePct(p3)},{n:4,l:"Consolidation",p:phasePct(p4)}];
+
+  return(<div>
+    <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:20}}>
+      <Badge brandId={e.brand} size={56}/>
+      <div style={{flex:1}}><div style={{fontSize:22,fontWeight:800}}>{bn(e.brand)} {cn(e.country)}</div>
+      <div style={{fontSize:13,color:"var(--gray)"}}>{cf(e.country)} {D.countries[e.country]?.currency} • Day 3 of {e.close_target_days} • {es.tasksDone}/{es.tasksTotal} tasks</div></div>
+      <Pill s={es.status}/>
+    </div>
+
+    <div className="card" style={{marginBottom:16}}>
+      <div className="card-hd">Phase Progress</div>
+      {phases.map(p=><div key={p.n} style={{display:"flex",alignItems:"center",gap:12,marginBottom:8}}>
+        <div style={{width:24,height:24,borderRadius:"50%",background:p.p>=100?"var(--green)":p.p>0?"var(--blue)":"#E5E7EB",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,flexShrink:0}}>{p.n}</div>
+        <div style={{width:140,fontSize:13,fontWeight:500,color:"var(--text2)"}}>{p.l}</div>
+        <div style={{flex:1}}><PBar pct={p.p}/></div>
+        <div style={{width:40,textAlign:"right",fontSize:12,fontWeight:600,color:p.p>=100?"var(--green)":p.p>0?"var(--blue)":"#D1D5DB"}}>{p.p}%</div>
+      </div>)}
+    </div>
+
+    {es.blocker&&<div className="blocker">
+      <div style={{fontSize:13,fontWeight:700,color:"var(--red)",marginBottom:6}}>⚠ BLOCKER: {es.blocker.task}</div>
+      <div style={{fontSize:13,color:"#7F1D1D",lineHeight:1.5}}>{es.blocker.desc}</div>
+      <div style={{marginTop:8,fontSize:12,color:"var(--blue)",cursor:"pointer",fontWeight:600}} onClick={()=>nav("task",{eid,blocker:es.blocker})}>View Details & Resolution →</div>
+    </div>}
+
+    <div className="card" style={{marginBottom:16}}>
+      <div className="card-hd">Sub-Processes ({sps.length})</div>
+      {sps.map(sp=>{const t=getSP(sp.id);if(!t)return null;return(
+        <div key={sp.id} className="spr" onClick={()=>{if(sp.status==="blocked"&&es.blocker)nav("task",{eid,blocker:es.blocker})}}>
+          <div style={{width:8,height:8,borderRadius:"50%",background:SC[sp.status]||"#D1D5DB",flexShrink:0}}/>
+          <div style={{flex:1,fontSize:13,fontWeight:500,color:"var(--text2)"}}>{t.name}</div>
+          <div style={{fontSize:11,color:"var(--muted)",width:70}}>{t.systemId}</div>
+          <div style={{width:80}}><PBar pct={sp.pct} h={4}/></div>
+          <Pill s={sp.status}/>
+        </div>
+      )})}
+    </div>
+
+    {e.locations&&e.locations.length>0&&<div className="card">
+      <div className="card-hd">Locations ({e.locations.length})</div>
+      <div style={{overflowX:"auto"}}><table className="dtbl"><thead><tr>
+        {["Location","Type","City","Units","Revenue (K)","Service ROs"].map(h=><th key={h}>{h}</th>)}
+      </tr></thead><tbody>{e.locations.map(loc=>{const m=D.locationMetrics[loc.id]||{};return(
+        <tr key={loc.id} style={{cursor:"pointer"}} onClick={()=>nav("loc",{eid,lid:loc.id,loc})}>
+          <td style={{fontWeight:600}}>{loc.name}</td>
+          <td style={{color:"var(--gray)"}}>{loc.type}</td>
+          <td style={{color:"var(--gray)"}}>{loc.city}</td>
+          <td style={{fontWeight:600}}>{m.units||"—"}</td>
+          <td style={{fontWeight:600,color:"var(--green)"}}>AED {(m.revenue||m.serviceRevenue||m.partsRevenue||0).toLocaleString()}</td>
+          <td style={{fontWeight:600}}>{m.ros||"—"}</td>
+        </tr>
+      )})}</tbody></table></div>
+    </div>}
+  </div>);
+};
+
+// === TASK DETAIL ===
+const TaskDetail=({eid,blocker})=>{
+  const e=getEnt(eid);
+  return(<div>
+    <div style={{fontSize:18,fontWeight:700,marginBottom:4}}>{blocker.task}</div>
+    <div style={{fontSize:13,color:"var(--gray)",marginBottom:20}}>Entity: {bn(e?.brand)} {cn(e?.country)}</div>
+    <div className="card" style={{borderColor:"var(--red-bdr)",marginBottom:12}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+        <div style={{width:10,height:10,borderRadius:"50%",background:"var(--red)"}}/>
+        <div style={{fontSize:15,fontWeight:700,flex:1}}>{blocker.task}</div>
+        <Pill s="blocked"/>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12,marginBottom:16,fontSize:13}}>
+        <div><span style={{color:"var(--muted)"}}>Assignee: </span><span style={{fontWeight:600}}>{blocker.resolutionAssignee?.split("(")[0]}</span></div>
+        <div><span style={{color:"var(--muted)"}}>Due: </span><span style={{fontWeight:600,color:"var(--red)"}}>Day 3 (overdue)</span></div>
+        <div><span style={{color:"var(--muted)"}}>Est. Effort: </span><span style={{fontWeight:600}}>{blocker.estEffort}</span></div>
+      </div>
+      <div className="blocker" style={{margin:"0 0 12px"}}><div style={{fontSize:12,fontWeight:700,color:"var(--red)",marginBottom:4}}>BLOCKER</div><div style={{fontSize:13,color:"#7F1D1D",lineHeight:1.5}}>{blocker.desc}</div></div>
+      <div className="resolution"><div style={{fontSize:12,fontWeight:700,color:"var(--green)",marginBottom:4}}>RESOLUTION</div><div style={{fontSize:13,color:"#064E3B",lineHeight:1.5}}>{blocker.resolution}</div>
+        <div style={{fontSize:12,color:"var(--green)",marginTop:6,fontWeight:600}}>Assign to: {blocker.resolutionAssignee}</div></div>
+      {blocker.blocks&&<div style={{fontSize:12,color:"var(--gray)"}}><strong>Blocks: </strong>{blocker.blocks.join(", ")}</div>}
+    </div>
+  </div>);
+};
+
+// === LOCATION DETAIL ===
+const LocDetail=({loc,lid})=>{
+  const m=D.locationMetrics[lid]||{};
+  const isSvc=loc.type.includes("Service")||loc.type==="Combined"||loc.type.includes("Multi");
+  const bay=[{h:"6AM",v:20},{h:"8AM",v:65},{h:"10AM",v:92},{h:"12PM",v:78},{h:"2PM",v:88},{h:"4PM",v:72},{h:"6PM",v:45},{h:"8PM",v:15}];
+  return(<div>
+    <div style={{fontSize:18,fontWeight:700,marginBottom:4}}>{loc.name}</div>
+    <div style={{fontSize:13,color:"var(--gray)",marginBottom:20}}>{loc.type} • {loc.city}</div>
+    <div className="stats">
+      {m.units>0&&<div className="stat" style={{borderLeftColor:"var(--navy)"}}><div className="v">{m.units}</div><div className="l">Units Sold</div></div>}
+      {m.ros>0&&<div className="stat" style={{borderLeftColor:"var(--navy)"}}><div className="v">{m.ros}</div><div className="l">Repair Orders</div></div>}
+      <div className="stat" style={{borderLeftColor:"var(--green)"}}><div className="v" style={{fontSize:20}}>AED {((m.revenue||0)+(m.serviceRevenue||0)+(m.partsRevenue||0)).toLocaleString()}K</div><div className="l">Revenue MTD</div></div>
+      {m.avgRO&&<div className="stat" style={{borderLeftColor:"var(--blue)"}}><div className="v" style={{fontSize:20}}>AED {m.avgRO}</div><div className="l">Avg / RO</div></div>}
+      {m.bayUtil&&<div className="stat" style={{borderLeftColor:"var(--amber)"}}><div className="v">{m.bayUtil}%</div><div className="l">Bay Util.</div></div>}
+    </div>
+    {isSvc&&m.ros>0&&<div className="card" style={{marginBottom:16}}>
+      <div className="card-hd">Bay Utilization by Hour</div>
+      <div className="bars">{bay.map((d,i)=><div key={i} className="bcol">
+        <div style={{fontSize:10,fontWeight:600}}>{d.v}%</div>
+        <div className="bar" style={{height:`${d.v*1.1}px`,background:d.v>85?"var(--amber)":d.v>50?"var(--blue)":"#D1D5DB"}}/>
+        <div style={{fontSize:10,color:"var(--muted)"}}>{d.h}</div>
+      </div>)}</div>
+    </div>}
+    {lid==="DXB-QUOZ"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+      <div className="card"><div className="card-hd">Service Advisors</div>
+        <table className="dtbl"><thead><tr>{["Name","ROs","Rev(K)","Upsell","CSI"].map(h=><th key={h}>{h}</th>)}</tr></thead>
+        <tbody>{D.staffPerformance.advisors.map(s=><tr key={s.name}><td style={{fontWeight:600}}>{s.name}</td><td>{s.ros}</td><td style={{color:"var(--green)",fontWeight:600}}>{s.revenue}</td><td>{s.upsell}%</td><td style={{color:s.csi>=4.5?"var(--green)":"var(--amber)",fontWeight:600}}>{s.csi}</td></tr>)}</tbody></table></div>
+      <div className="card"><div className="card-hd">Technicians</div>
+        <table className="dtbl"><thead><tr>{["Name","Jobs","Effic.","Comeback"].map(h=><th key={h}>{h}</th>)}</tr></thead>
+        <tbody>{D.staffPerformance.technicians.map(s=><tr key={s.name}><td style={{fontWeight:600}}>{s.name}</td><td>{s.jobs}</td><td style={{color:s.efficiency>=90?"var(--green)":"var(--amber)",fontWeight:600}}>{s.efficiency}%</td><td style={{color:s.comeback<=1.5?"var(--green)":"var(--amber)"}}>{s.comeback}%</td></tr>)}</tbody></table></div>
+    </div>}
+    {m.units>0&&<div className="card" style={{marginTop:16}}>
+      <div className="card-hd">Sales Performance</div>
+      <div style={{display:"flex",gap:24,flexWrap:"wrap",fontSize:13}}>
+        {m.testDrives&&<div><span style={{color:"var(--muted)"}}>Test Drives: </span><strong>{m.testDrives}</strong></div>}
+        {m.conversion&&<div><span style={{color:"var(--muted)"}}>Conversion: </span><strong>{m.conversion}%</strong></div>}
+        {m.asp&&<div><span style={{color:"var(--muted)"}}>ASP: </span><strong>AED {m.asp.toLocaleString()}</strong></div>}
+        {m.gpu&&<div><span style={{color:"var(--muted)"}}>GPU: </span><strong>AED {m.gpu.toLocaleString()}</strong></div>}
+      </div>
+    </div>}
+  </div>);
+};
+
+// === PROCESS FLOW ===
+const Flow=({period,roleId})=>{
+  const[sel,setSel]=useState(null);
+  const isITOps=roleId==="it_ops";
+  const SC2={healthy:"var(--green)",failed:"var(--red)",delayed:"var(--amber)",waiting:"var(--muted)"};
+  // Period-aware health: live June shows real failures; closed months are all healthy; upcoming = idle
+  const isLive=period?.status==="active";
+  const isClosed=period?.status==="closed"||period?.status==="completed";
+  const isUpcoming=period?.status==="upcoming";
+  const st=(live,closed,upcoming)=>isLive?live:isClosed?closed:upcoming;
+  const nodes=[
+    {id:"S4",x:"38%",y:"34%",w:180,lb:"SAP S/4HANA",sub:"ACDOCA • FI/CO/MM/SD",core:true,st:st("healthy","healthy","waiting")},
+    {id:"DMS",x:"38%",y:"2%",w:140,lb:"DMS",sub:"Vehicle Sales, ROs",st:st("failed","healthy","waiting")},
+    {id:"AP",x:"2%",y:"10%",w:130,lb:"AP Automation",sub:"Invoices",st:st("healthy","healthy","waiting")},
+    {id:"BANK",x:"2%",y:"34%",w:130,lb:"Bank Comm",sub:"Statements",st:st("healthy","healthy","waiting")},
+    {id:"CONCUR",x:"2%",y:"56%",w:130,lb:"Concur",sub:"Expenses",st:st("healthy","healthy","waiting")},
+    {id:"SF",x:"2%",y:"78%",w:130,lb:"SuccessFactors",sub:"Payroll",st:st("delayed","healthy","waiting")},
+    {id:"TAX",x:"75%",y:"10%",w:130,lb:"Tax Engine",sub:"VAT/GST",st:st("healthy","healthy","waiting")},
+    {id:"TREASURY",x:"75%",y:"34%",w:130,lb:"Treasury",sub:"Cash, FX, IC",st:st("healthy","healthy","waiting")},
+    {id:"GRP",x:"75%",y:"56%",w:130,lb:"Group Reporting",sub:"Consolidation",st:st("waiting","healthy","waiting")},
+    {id:"SAC",x:"75%",y:"78%",w:130,lb:"SAC / BPC",sub:"Planning",st:st("waiting","healthy","waiting")},
+  ];
+  const ln=(live,closed)=>isLive?SC2[live]:isClosed?SC2[closed]:SC2.waiting;
+  const subtitle=isLive?`${period.label} • Real-time sync monitoring`:isClosed?`${period.label} • All integrations completed cleanly`:`${period.label} • Not yet started`;
+  return(<div>
+    <div style={{fontSize:22,fontWeight:800,marginBottom:4}}>System Integration Map</div>
+    <div style={{fontSize:13,color:"var(--gray)",marginBottom:16}}>{subtitle}</div>
+    {isLive&&<div style={{display:"flex",gap:12,marginBottom:16,flexWrap:"wrap"}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 14px",background:"var(--white)",border:"1px solid var(--gray-bdr)",borderRadius:8,fontSize:12}}>
+        <span style={{width:8,height:8,borderRadius:"50%",background:"var(--green)"}}/><strong>7</strong> Healthy</div>
+      <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 14px",background:"var(--white)",border:"1px solid var(--gray-bdr)",borderRadius:8,fontSize:12}}>
+        <span style={{width:8,height:8,borderRadius:"50%",background:"var(--amber)"}}/><strong>1</strong> Delayed (SuccessFactors)</div>
+      <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 14px",background:"var(--white)",border:"1px solid var(--red-bdr)",borderRadius:8,fontSize:12}}>
+        <span style={{width:8,height:8,borderRadius:"50%",background:"var(--red)"}}/><strong>1</strong> Failed (DMS sync)</div>
+      <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 14px",background:"var(--white)",border:"1px solid var(--gray-bdr)",borderRadius:8,fontSize:12}}>
+        <span style={{width:8,height:8,borderRadius:"50%",background:"var(--muted)"}}/><strong>2</strong> Awaiting (close-time syncs)</div>
+    </div>}
+    {isClosed&&<div style={{display:"flex",gap:12,marginBottom:16}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 14px",background:"var(--green-bg)",border:"1px solid var(--green-bdr)",borderRadius:8,fontSize:12,color:"var(--green)",fontWeight:600}}>
+        <span>✓</span> All 11 system integrations completed cleanly for {period.shortLabel}</div>
+    </div>}
+    {isITOps&&isLive&&<div className="card" style={{marginBottom:16,borderColor:"var(--red-bdr)"}}>
+      <div className="card-hd" style={{color:"var(--red)"}}>⚠ IT Action Queue (2)</div>
+      <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:"1px solid #F3F4F6"}}>
+        <span style={{width:10,height:10,borderRadius:"50%",background:"var(--red)"}}/>
+        <div style={{flex:1}}><div style={{fontWeight:600,fontSize:13}}>DMS → S/4HANA sync failed</div>
+        <div style={{fontSize:11,color:"var(--muted)"}}>Jeddah batch timeout (34 txns) + Riyadh validation (13 ROs missing cost center) · 2026-06-03 02:15</div></div>
+        <button className="btn btn-p" style={{padding:"5px 12px"}}>Restart Sync</button>
+        <button className="btn btn-o" style={{padding:"5px 12px"}}>Mark Resolved</button>
+      </div>
+      <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0"}}>
+        <span style={{width:10,height:10,borderRadius:"50%",background:"var(--amber)"}}/>
+        <div style={{flex:1}}><div style={{fontWeight:600,fontSize:13}}>SuccessFactors → S/4HANA payroll delayed</div>
+        <div style={{fontSize:11,color:"var(--muted)"}}>Pakistan payroll pending HR overtime approval · 142 employees affected</div></div>
+        <button className="btn btn-o" style={{padding:"5px 12px"}}>Escalate</button>
+      </div>
+    </div>}
+    <div style={{position:"relative",minHeight:420,background:"var(--white)",borderRadius:"var(--r)",border:"1px solid var(--gray-bdr)",padding:20}}>
+      <svg style={{position:"absolute",inset:0,width:"100%",height:"100%",zIndex:1,pointerEvents:"none"}}>
+        <defs><marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#94A3B8"/></marker></defs>
+        <line x1="17%" y1="20%" x2="38%" y2="38%" stroke={ln("healthy","healthy")} strokeWidth="1.5" markerEnd="url(#arr)" strokeDasharray="5"/>
+        <line x1="17%" y1="40%" x2="38%" y2="40%" stroke={ln("healthy","healthy")} strokeWidth="1.5" markerEnd="url(#arr)" strokeDasharray="5"/>
+        <line x1="17%" y1="62%" x2="38%" y2="45%" stroke={ln("healthy","healthy")} strokeWidth="1.5" markerEnd="url(#arr)" strokeDasharray="5"/>
+        <line x1="17%" y1="84%" x2="38%" y2="48%" stroke={ln("delayed","healthy")} strokeWidth="1.5" markerEnd="url(#arr)" strokeDasharray="5"/>
+        <line x1="48%" y1="12%" x2="48%" y2="34%" stroke={ln("failed","healthy")} strokeWidth="2" markerEnd="url(#arr)" strokeDasharray="5"/>
+        <line x1="58%" y1="38%" x2="75%" y2="20%" stroke={ln("healthy","healthy")} strokeWidth="1.5" markerEnd="url(#arr)" strokeDasharray="5"/>
+        <line x1="58%" y1="40%" x2="75%" y2="40%" stroke={ln("healthy","healthy")} strokeWidth="1.5" markerEnd="url(#arr)" strokeDasharray="5"/>
+        <line x1="58%" y1="45%" x2="75%" y2="62%" stroke={ln("waiting","healthy")} strokeWidth="1.5" markerEnd="url(#arr)" strokeDasharray="5"/>
+        <line x1="58%" y1="48%" x2="75%" y2="84%" stroke={ln("healthy","healthy")} strokeWidth="1.5" markerEnd="url(#arr)" strokeDasharray="5"/>
+      </svg>
+      {nodes.map(n=><div key={n.id} className="fnode" style={{left:n.x,top:n.y,width:n.w,background:n.core?"var(--navy)":"var(--white)",border:n.core?"none":`2px solid ${SC2[n.st]}`,boxShadow:sel===n.id?"0 4px 20px rgba(0,0,0,0.15)":"var(--shadow)",transform:sel===n.id?"scale(1.06)":"scale(1)",zIndex:sel===n.id?10:2}} onClick={()=>setSel(n.id===sel?null:n.id)}>
+        <div style={{width:10,height:10,borderRadius:"50%",background:SC2[n.st],position:"absolute",top:-5,right:-5,border:"2px solid var(--white)"}}/>
+        <div style={{fontSize:n.core?13:11,fontWeight:700,color:n.core?"#fff":"var(--text)"}}>{n.lb}</div>
+        <div style={{fontSize:9,color:n.core?"#93C5FD":"var(--muted)",marginTop:2}}>{n.sub}</div>
+      </div>)}
+    </div>
+    {sel&&(()=>{
+      const sys=D.systems.find(s=>s.id===sel);
+      const syncStatus=isClosed?"healthy":sys.syncStatus;
+      const syncLabel={healthy:"Sync Completed",failed:"Sync Failed",delayed:"Sync Delayed",waiting:"Awaiting Sync"}[syncStatus];
+      const syncColor=SC2[syncStatus];
+      return(<div className="card" style={{marginTop:16}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+          <div className="card-hd" style={{margin:0}}>{sys.name}</div>
+          <span style={{fontSize:10,fontWeight:500,color:"var(--gray)",background:"#F3F4F6",padding:"2px 8px",borderRadius:4}}>{sys.tier}</span>
+        </div>
+        <div style={{fontSize:13,color:"var(--gray)",marginBottom:14}}>{sys.desc}</div>
+
+        {/* Sync freshness banner */}
+        <div style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderRadius:8,background:syncColor+"12",border:`1px solid ${syncColor}40`,marginBottom:14}}>
+          <div style={{width:12,height:12,borderRadius:"50%",background:syncColor,flexShrink:0}}/>
+          <div style={{flex:1}}>
+            <div style={{fontSize:13,fontWeight:700,color:syncColor}}>{syncLabel}</div>
+            <div style={{fontSize:11,color:"var(--gray)"}}>Last sync: {isClosed?"Completed for "+period.shortLabel:sys.lastSync}</div>
+          </div>
+        </div>
+
+        {/* Where data originates */}
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:10,fontWeight:700,color:"var(--muted)",letterSpacing:1,marginBottom:4}}>DATA SOURCES (ORIGIN)</div>
+          <div style={{fontSize:12,color:"var(--text2)"}}>{sys.dataSources}</div>
+        </div>
+
+        {/* Integrations with sync time + status */}
+        <div style={{fontSize:10,fontWeight:700,color:"var(--muted)",letterSpacing:1,marginBottom:6}}>INTEGRATIONS</div>
+        {D.integrations.filter(i=>i.from===sel||i.to===sel).map((int,idx)=>{
+          const dispStatus=isClosed?"healthy":int.status;
+          const dispError=isClosed?null:int.error;
+          const stLabel={healthy:"Completed",failed:"Failed",delayed:"Delayed",waiting:"Pending"}[dispStatus];
+          return(
+          <div key={idx} className="spr" style={{cursor:"default"}}>
+            <div style={{width:8,height:8,borderRadius:"50%",background:SC2[dispStatus]||"var(--muted)",flexShrink:0}}/>
+            <div style={{flex:1}}>
+              <div style={{fontWeight:600,fontSize:13}}>{int.from} → {int.to}: {int.label}</div>
+              <div style={{fontSize:11,color:"var(--muted)"}}>Frequency: {int.freq} • Method: {int.method}</div>
+              <div style={{fontSize:11,color:"var(--muted)"}}>{dispStatus==="waiting"?"Not yet run this period":`${stLabel} ${isClosed?"":"· "+int.lastSync} ${int.records>0&&!isClosed?"· "+int.records+" records":""}`}</div>
+              {dispError&&<div style={{fontSize:11,color:"var(--red)",marginTop:2}}>⚠ {dispError}</div>}
+            </div>
+            <span style={{fontSize:10,fontWeight:700,padding:"3px 10px",borderRadius:20,background:(SC2[dispStatus]||"var(--muted)")+"1A",color:SC2[dispStatus]||"var(--muted)",whiteSpace:"nowrap"}}>{stLabel}</span>
+          </div>
+        )})}
+      </div>);
+    })()}
+  </div>);
+};
+
+// === PROCESS DAG ===
+const DAG=({period})=>{
+  const ptype=period?.type||"monthly";
+  const isLive=period?.status==="active";
+  const isClosed=period?.status==="closed"||period?.status==="completed";
+  const isUpcoming=period?.status==="upcoming";
+
+  // Base monthly tasks from template
+  let tasks=D.processTemplates[0].subProcesses.flatMap(sp=>sp.tasks?.map(t=>({...t,sp:sp.name,sys:sp.systemId}))||[]);
+  // Quarterly adds quarterly add-on tasks (day 6 = after monthly closes); Annual adds those + annual add-ons (day 7)
+  if(ptype==="quarterly"||ptype==="annual"){
+    const q=D.processTemplates[1]?.additionalSubProcesses||[];
+    q.forEach(sp=>sp.tasks?.forEach(t=>tasks.push({...t,sp:sp.name,sys:sp.systemId,targetDay:6,addon:"quarterly"})));
+  }
+  if(ptype==="annual"){
+    const a=D.processTemplates[2]?.additionalSubProcesses||[];
+    a.forEach(sp=>sp.tasks?.forEach(t=>tasks.push({...t,sp:sp.name,sys:sp.systemId,targetDay:7,addon:"annual"})));
+  }
+
+  // Status per task — live June uses the real snapshot; closed = all done; upcoming = all not started
+  const liveStatus={"T-DMS-VERIFY":"completed","T-AP-CUTOFF":"completed","T-AP-GRNI":"completed","T-AR-BILL":"completed","T-AR-BAD":"completed","T-PAY-CALC":"completed","T-PAY-POST":"completed","T-ASSET-DEPR":"completed","T-ASSET-RECON":"completed","T-INV-RECON":"completed","T-INV-WD":"completed","T-EXP-PROC":"completed","T-EXP-ACC":"completed","T-BANK-IMP":"completed","T-BANK-REC":"in_progress","T-IC-MATCH":"blocked","T-IC-RESOLVE":"waiting","T-TAX-CALC":"in_progress","T-TAX-POST":"waiting","T-FX-REVAL":"waiting","T-PROV-UPD":"waiting"};
+  const statusFor=t=>isClosed?"completed":isUpcoming?"not_started":(t.addon?"waiting":(liveStatus[t.id]||"waiting"));
+
+  const sColor=s=>({completed:"var(--green)",in_progress:"var(--blue)",blocked:"var(--red)",waiting:"#D1D5DB",not_started:"#D1D5DB"})[s]||"#D1D5DB";
+
+  // Columns: monthly = days 1-5; quarterly adds "Q Add-ons"; annual adds "Annual Add-ons"
+  let dayCols=[1,2,3,4,5];
+  const colLabels={1:"Day 1",2:"Day 2",3:"Day 3",4:"Day 4",5:"Day 5",6:"Q Add-ons",7:"Annual Add-ons"};
+  if(ptype==="quarterly")dayCols=[1,2,3,4,5,6];
+  if(ptype==="annual")dayCols=[1,2,3,4,5,6,7];
+  const cols={};dayCols.forEach(d=>cols[d]=[]);
+  tasks.forEach(t=>{const d=t.targetDay||1;if(cols[d])cols[d].push(t);else cols[1].push(t)});
+
+  const subtitle=ptype==="monthly"?"Monthly Close Template":ptype==="quarterly"?"Quarterly Close = Monthly tasks + quarterly add-ons (provisions, compliance, board, forecast)":"Annual Close = Quarterly tasks + annual add-ons (audit, statutory, tax, budget)";
+
+  return(<div>
+    <div style={{fontSize:22,fontWeight:800,marginBottom:4}}>Process Dependency Graph</div>
+    <div style={{fontSize:13,color:"var(--gray)",marginBottom:20}}>{period?.label} • {subtitle}</div>
+    <div className="card" style={{overflowX:"auto"}}>
+      <div style={{display:"flex",gap:16,minWidth:dayCols.length*170,padding:"8px 0"}}>
+        {dayCols.map(day=><div key={day} style={{flex:1,minWidth:155}}>
+          <div style={{fontSize:11,fontWeight:700,color:day>=6?"var(--amber)":"var(--blue)",marginBottom:10,textAlign:"center",padding:"4px 8px",background:day>=6?"var(--amber-bg)":"var(--blue-bg)",borderRadius:4}}>{colLabels[day]}</div>
+          {(cols[day]||[]).map(t=>{const st=statusFor(t);return(
+            <div key={t.id} style={{background:sColor(st)+"1A",border:`1.5px solid ${sColor(st)}`,borderRadius:8,padding:"8px 10px",marginBottom:6,fontSize:11}}>
+              <div style={{fontWeight:700,color:"var(--text)",marginBottom:2}}>{t.name}</div>
+              <div style={{color:"var(--muted)",fontSize:10}}>{t.ownerRole} • {t.effortHrs}h</div>
+              <div style={{display:"flex",alignItems:"center",gap:4,marginTop:4}}>
+                <div style={{width:6,height:6,borderRadius:"50%",background:sColor(st)}}/>
+                <span style={{fontSize:10,fontWeight:600,color:sColor(st)}}>{SL[st]}</span>
+              </div>
+              {t.dependsOn&&t.dependsOn.length>0&&<div style={{fontSize:9,color:"var(--muted)",marginTop:3}}>← {t.dependsOn.join(", ")}</div>}
+            </div>
+          )})}
+        </div>)}
+      </div>
+    </div>
+    {(ptype==="quarterly"||ptype==="annual")&&<div className="info" style={{marginTop:16}}>
+      <strong>Composition:</strong> The {ptype==="quarterly"?"Q Add-ons":"add-on"} columns depend on the underlying monthly closes completing first. Quarterly add-on tasks unlock only after the 3rd monthly close (June) signs off{ptype==="annual"?", and annual add-ons unlock after Q4 completes":""}.
+    </div>}
+  </div>);
+};
+
+// === CONFIGURATION ===
+const Config=({canEdit})=>{
+  const[tab,setTab]=useState("entities");
+  const[exp,setExp]=useState({auto:true});
+  const[wizard,setWizard]=useState(0);
+  const tog=id=>setExp(p=>({...p,[id]:!p[id]}));
+  const tabs=canEdit?["entities","systems","processes","people","initiate"]:["entities","systems","processes","people"];
+
+  return(<div>
+    <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
+      <div style={{fontSize:22,fontWeight:800}}>Platform Configuration</div>
+      {!canEdit&&<span style={{fontSize:11,fontWeight:600,padding:"4px 12px",borderRadius:20,background:"var(--gray-bg)",color:"var(--gray)",border:"1px solid var(--gray-bdr)"}}>🔒 Read-only · Platform Admin can edit</span>}
+    </div>
+    <div className="ctabs">
+      {tabs.map(t=>(
+        <button key={t} className={`ctab${tab===t?" act":""}`} onClick={()=>{setTab(t);setWizard(0)}}>{t.charAt(0).toUpperCase()+t.slice(1)}</button>
+      ))}
+    </div>
+
+    {tab==="entities"&&<div className="card">
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+        <div className="card-hd" style={{margin:0}}>Organization Hierarchy</div>
+        {canEdit&&<button className="btn btn-o">+ Add Entity</button>}
+      </div>
+      <div style={{fontWeight:700,fontSize:14,marginBottom:8,display:"flex",alignItems:"center",gap:8}}>📁 Al-Futtaim Group</div>
+      <div style={{marginLeft:20}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0",cursor:"pointer"}} onClick={()=>tog("auto")}>
+          <span style={{fontSize:11,transform:exp.auto?"rotate(90deg)":"none",transition:"transform 0.2s",color:"var(--muted)"}}>▸</span>
+          <span style={{fontWeight:600}}>🏢 Al-Futtaim Automotive</span>
+          <span style={{fontSize:11,color:"var(--muted)"}}>20 entities • 8 countries • 6 brands</span>
+          {canEdit&&<button className="btn btn-o" style={{marginLeft:"auto",padding:"2px 8px",fontSize:10}} onClick={e=>e.stopPropagation()}>Edit</button>}
+        </div>
+        {exp.auto&&Object.entries(D.brands).map(([bId,brand])=>{
+          const ents=D.entityStatuses.filter(es=>getEnt(es.id)?.brand===bId);
+          return(<div key={bId} style={{marginLeft:24}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,padding:"5px 0",cursor:"pointer"}} onClick={()=>tog(bId)}>
+              <span style={{fontSize:10,transform:exp[bId]?"rotate(90deg)":"none",transition:"transform 0.2s",color:"var(--muted)"}}>▸</span>
+              <Badge brandId={bId} size={22}/>
+              <span style={{fontWeight:500,fontSize:13}}>{brand.name}</span>
+              <span style={{fontSize:11,color:"var(--muted)"}}>{ents.length} entities</span>
+            </div>
+            {exp[bId]&&ents.map(es=>{const e=getEnt(es.id);if(!e)return null;return(
+              <div key={es.id} style={{marginLeft:32}}>
+                <div style={{display:"flex",alignItems:"center",gap:6,padding:"4px 0",fontSize:12,cursor:"pointer"}} onClick={()=>tog(es.id)}>
+                  <span style={{fontSize:9,transform:exp[es.id]?"rotate(90deg)":"none",transition:"transform 0.2s",color:"var(--muted)"}}>▸</span>
+                  {cf(e.country)} {brand.name} {cn(e.country)}
+                  <span style={{color:"var(--muted)"}}>({D.countries[e.country]?.currency})</span>
+                  <span style={{color:"var(--muted)"}}>{e.locations?.length||0} locations</span>
+                  {canEdit&&<button className="btn btn-o" style={{marginLeft:"auto",padding:"1px 6px",fontSize:10}} onClick={ev=>ev.stopPropagation()}>Edit</button>}
+                </div>
+                {exp[es.id]&&e.locations?.map(loc=>(
+                  <div key={loc.id} style={{marginLeft:40,padding:"2px 0",fontSize:11,color:"var(--gray)",display:"flex",gap:8}}>
+                    <span>📍</span>
+                    <span style={{fontWeight:500}}>{loc.name}</span>
+                    <span style={{color:"var(--muted)"}}>• {loc.type} • {loc.city}</span>
+                  </div>
+                ))}
+              </div>
+            )})}
+          </div>);
+        })}
+      </div>
+    </div>}
+
+    {tab==="systems"&&<div className="card">
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+        <div className="card-hd" style={{margin:0}}>Systems Registry ({D.systems.length})</div>
+        {canEdit&&<button className="btn btn-o">+ Add System</button>}
+      </div>
+      {D.systems.map(s=>(
+        <div key={s.id} className="spr" style={{cursor:"pointer"}} onClick={()=>tog("sys-"+s.id)}>
+          <div style={{width:10,height:10,borderRadius:"50%",background:s.color,flexShrink:0}}/>
+          <div style={{flex:1}}>
+            <div style={{fontWeight:600,fontSize:13}}>{s.name}</div>
+            <div style={{fontSize:11,color:"var(--muted)"}}>{s.desc}</div>
+            {exp["sys-"+s.id]&&<div style={{marginTop:8,padding:10,background:"var(--gray-bg)",borderRadius:6,fontSize:12}}>
+              <div style={{fontWeight:600,marginBottom:2}}>Data Sources (origin):</div>
+              <div style={{color:"var(--text2)",marginBottom:8}}>{s.dataSources}</div>
+              <div style={{fontWeight:600,marginBottom:4}}>Integrations:</div>
+              {D.integrations.filter(i=>i.from===s.id||i.to===s.id).map((int,idx)=>(
+                <div key={idx} style={{padding:"3px 0",color:"var(--text2)"}}>{int.from} → {int.to}: {int.label} <span style={{color:"var(--muted)"}}>({int.freq})</span></div>
+              ))}
+              <div style={{fontWeight:600,marginTop:8,marginBottom:4}}>Used By (tasks reading/writing this system):</div>
+              {(()=>{const used=tasksUsingSystem(s.id);return used.length?used.map(t=>(
+                <div key={t.id} style={{padding:"2px 0",color:"var(--text2)"}}>• {t.name} <span style={{color:"var(--muted)"}}>({t.spName})</span></div>
+              )):<div style={{color:"var(--muted)"}}>No tasks mapped yet</div>})()}
+              <div style={{fontWeight:600,marginTop:8,marginBottom:4}}>Owner: <span style={{fontWeight:400}}>{s.owner}</span></div>
+            </div>}
+          </div>
+          <span style={{fontSize:11,fontWeight:500,color:"var(--gray)",background:"#F3F4F6",padding:"2px 8px",borderRadius:4}}>{s.tier}</span>
+          {canEdit&&<button className="btn btn-o" style={{padding:"2px 8px",fontSize:10}}>Edit</button>}
+        </div>
+      ))}
+    </div>}
+
+    {tab==="processes"&&<div className="card">
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+        <div className="card-hd" style={{margin:0}}>Process Templates</div>
+        {canEdit&&<button className="btn btn-o">+ Add Process</button>}
+      </div>
+      {D.processTemplates.map(pt=>(
+        <div key={pt.id} style={{marginBottom:16,padding:16,background:"var(--gray-bg)",borderRadius:8}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:12}}>
+            <div><div style={{fontWeight:700,fontSize:14}}>{pt.name}</div>
+              <div style={{fontSize:12,color:"var(--gray)"}}>{pt.subProcesses?`${pt.subProcesses.length} sub-processes • ~${pt.subProcesses.reduce((a,sp)=>a+(sp.tasks?.length||0),0)} tasks`:`Extends: ${pt.includesTemplate}`}{pt.targetDays&&` • ${pt.targetDays}-day target`}</div></div>
+            {canEdit&&<button className="btn btn-o" style={{padding:"4px 12px",fontSize:11}}>Edit</button>}
+          </div>
+          {pt.subProcesses&&[1,2,3,4].map(phase=>{
+            const sps=pt.subProcesses.filter(sp=>sp.phase===phase);
+            if(!sps.length)return null;
+            return(<div key={phase} style={{marginBottom:8}}>
+              <div style={{fontSize:11,fontWeight:700,color:"var(--blue)",marginBottom:4}}>Phase {phase}: {["","Sub-Ledger","GL Close","Entity Close","Consolidation"][phase]}</div>
+              {sps.map(sp=>(
+                <div key={sp.id} style={{marginLeft:16}}>
+                  <div style={{display:"flex",alignItems:"center",gap:6,padding:"3px 0",fontSize:12,cursor:"pointer"}} onClick={()=>tog("proc-"+sp.id)}>
+                    <span style={{fontSize:9,transform:exp["proc-"+sp.id]?"rotate(90deg)":"none",transition:"transform 0.2s",color:"var(--muted)"}}>▸</span>
+                    <span style={{fontWeight:500}}>{sp.name}</span>
+                    <span style={{color:"var(--muted)"}}>({sp.systemId})</span>
+                    <span style={{color:"var(--muted)"}}>{sp.tasks?.length||0} tasks</span>
+                  </div>
+                  {exp["proc-"+sp.id]&&sp.tasks?.map(t=>{
+                    const e=enrich(t.id);
+                    const person=e?getPerson(e.assignee):null;
+                    const blocks=tasksBlockedBy(t.id);
+                    const open=exp["task-"+t.id];
+                    return(
+                    <div key={t.id} style={{marginLeft:20,marginBottom:4,border:"1px solid var(--gray-bdr)",borderRadius:6,background:"var(--white)"}}>
+                      <div style={{display:"flex",alignItems:"center",gap:6,padding:"7px 10px",fontSize:12,cursor:"pointer"}} onClick={()=>tog("task-"+t.id)}>
+                        <span style={{fontSize:9,transform:open?"rotate(90deg)":"none",transition:"transform 0.2s",color:"var(--muted)"}}>▸</span>
+                        <span style={{fontWeight:600,flex:1}}>{t.name}</span>
+                        {person&&<span style={{fontSize:10,background:"var(--blue-bg)",color:"var(--blue)",padding:"2px 8px",borderRadius:10,fontWeight:600}}>{person.name}</span>}
+                        <span style={{color:"var(--muted)",fontSize:10}}>Day {t.targetDay} • {t.effortHrs}h</span>
+                      </div>
+                      {open&&<div style={{padding:"4px 12px 12px 26px",fontSize:11,borderTop:"1px solid #F3F4F6"}}>
+                        {/* Assignment */}
+                        <div style={{margin:"8px 0 4px"}}>
+                          <span style={{color:"var(--muted)"}}>Assigned to: </span>
+                          {person?<span style={{fontWeight:600}}>{person.name} <span style={{color:"var(--muted)",fontWeight:400}}>({person.role})</span></span>:<span style={{color:"var(--muted)"}}>Role: {t.ownerRole} (unassigned)</span>}
+                        </div>
+                        <div style={{marginBottom:4}}>
+                          <span style={{color:"var(--muted)"}}>System: </span><span style={{fontWeight:600}}>{sn(sp.systemId)}</span>
+                          <span style={{color:"var(--muted)",fontSize:9,marginLeft:6}}>(inherited from {sp.name})</span>
+                        </div>
+                        <div style={{marginBottom:4}}><span style={{color:"var(--muted)"}}>Deliverable: </span>{t.deliverable}</div>
+                        {/* Dependencies both directions */}
+                        <div style={{display:"flex",gap:20,margin:"8px 0",flexWrap:"wrap"}}>
+                          <div><span style={{color:"var(--muted)"}}>Depends on: </span>{t.dependsOn?.length?t.dependsOn.map(taskNameById).join(", "):<span style={{color:"var(--muted)"}}>None (can start Day 1)</span>}</div>
+                          <div><span style={{color:"var(--muted)"}}>Blocks: </span>{blocks.length?blocks.join(", "):<span style={{color:"var(--muted)"}}>Nothing downstream</span>}</div>
+                        </div>
+                        {/* Data contract */}
+                        {e&&<div style={{marginTop:8,padding:10,background:"var(--gray-bg)",borderRadius:6}}>
+                          <div style={{fontSize:9,fontWeight:700,color:"var(--muted)",letterSpacing:1,marginBottom:6}}>DATA CONTRACT</div>
+                          <div style={{display:"flex",alignItems:"flex-start",gap:8,marginBottom:4}}>
+                            <span style={{fontSize:10,fontWeight:700,color:"var(--blue)",width:46,flexShrink:0}}>READS</span>
+                            <span>{e.reads.map((r,i)=><span key={i}>{i>0&&", "}<strong>{r.sys}</strong>: {r.obj}</span>)}</span>
+                          </div>
+                          <div style={{display:"flex",alignItems:"flex-start",gap:8,marginBottom:4}}>
+                            <span style={{fontSize:10,fontWeight:700,color:"var(--amber)",width:46,flexShrink:0}}>DOES</span>
+                            <span>{e.transform}</span>
+                          </div>
+                          <div style={{display:"flex",alignItems:"flex-start",gap:8}}>
+                            <span style={{fontSize:10,fontWeight:700,color:"var(--green)",width:46,flexShrink:0}}>WRITES</span>
+                            <span>{e.writes.map((w,i)=><span key={i}>{i>0&&", "}<strong>{w.sys}</strong>: {w.obj}</span>)}</span>
+                          </div>
+                        </div>}
+                        {canEdit&&<button className="btn btn-o" style={{padding:"3px 10px",fontSize:10,marginTop:8}}>Edit Task</button>}
+                      </div>}
+                    </div>
+                  )})}
+                </div>
+              ))}
+            </div>);
+          })}
+          {pt.additionalSubProcesses&&<div style={{marginTop:8}}>
+            <div style={{fontSize:11,fontWeight:700,color:"var(--amber)",marginBottom:4}}>Additional Sub-Processes</div>
+            {pt.additionalSubProcesses.map(sp=>(
+              <div key={sp.id} style={{marginLeft:16,padding:"2px 0",fontSize:12}}>• {sp.name} <span style={{color:"var(--muted)"}}>({sp.systemId})</span></div>
+            ))}
+          </div>}
+        </div>
+      ))}
+    </div>}
+
+    {tab==="people"&&<div className="card">
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+        <div className="card-hd" style={{margin:0}}>People & Roles ({D.people.length})</div>
+        {canEdit&&<button className="btn btn-o">+ Add Person</button>}
+      </div>
+      <table className="dtbl"><thead><tr>{["Name","Role","Entity","Email","System Access","Tasks"].map(h=><th key={h}>{h}</th>)}</tr></thead>
+      <tbody>{D.people.map(p=>{
+        const assigned=tasksAssignedTo(p.id);
+        const open=exp["per-"+p.id];
+        return(<React.Fragment key={p.id}>
+        <tr style={{cursor:assigned.length?"pointer":"default"}} onClick={()=>assigned.length&&tog("per-"+p.id)}>
+          <td style={{fontWeight:600}}>{assigned.length>0&&<span style={{fontSize:9,marginRight:4,color:"var(--muted)",display:"inline-block",transform:open?"rotate(90deg)":"none"}}>▸</span>}{p.name}</td>
+          <td>{p.role}</td>
+          <td style={{color:"var(--gray)"}}>{p.entity}</td>
+          <td style={{fontSize:12,color:"var(--blue)"}}>{p.email}</td>
+          <td>{p.systemAccess.map(s=><span key={s} style={{fontSize:10,background:"#F3F4F6",padding:"1px 6px",borderRadius:4,marginRight:3}}>{s}</span>)}</td>
+          <td><span style={{fontSize:11,fontWeight:600,color:assigned.length?"var(--blue)":"var(--muted)"}}>{assigned.length||"—"}</span></td>
+        </tr>
+        {open&&<tr><td colSpan={6} style={{background:"var(--gray-bg)",padding:"8px 16px"}}>
+          <div style={{fontSize:10,fontWeight:700,color:"var(--muted)",letterSpacing:1,marginBottom:6}}>ASSIGNED TASKS</div>
+          {assigned.map(t=>(
+            <div key={t.id} style={{fontSize:12,padding:"3px 0",color:"var(--text2)"}}>• {t.name} <span style={{color:"var(--muted)"}}>({t.spName} · Day {t.targetDay})</span></div>
+          ))}
+        </td></tr>}
+        </React.Fragment>
+      )})}</tbody></table>
+    </div>}
+
+    {tab==="initiate"&&<div className="card">
+      <div className="card-hd">Initiate New Close Cycle</div>
+      <div className="wstep">
+        {["Template","Period","Entities","Review","Confirm"].map((s,i)=>(
+          <React.Fragment key={s}>
+            {i>0&&<div className="wline" style={{background:wizard>=i?"var(--blue)":"#E5E7EB"}}/>}
+            <div style={{textAlign:"center"}}>
+              <div className={`wdot ${wizard>i?"done":wizard===i?"cur":"pend"}`}>{wizard>i?"✓":i+1}</div>
+              <div style={{fontSize:10,color:wizard>=i?"var(--blue)":"var(--muted)",marginTop:4,fontWeight:wizard===i?600:400}}>{s}</div>
+            </div>
+          </React.Fragment>
+        ))}
+      </div>
+      {wizard===0&&<div>
+        <div style={{fontSize:13,fontWeight:600,marginBottom:8}}>Select Process Template:</div>
+        {["Monthly Financial Close (5 days)","Quarterly Financial Close (7 days)","Annual Financial Close (15 days)"].map((t,i)=>(
+          <div key={i} style={{padding:"10px 14px",border:"1px solid var(--gray-bdr)",borderRadius:8,marginBottom:8,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:8}} onClick={()=>setWizard(1)}>
+            <div style={{width:8,height:8,borderRadius:"50%",background:i===0?"var(--blue)":"#D1D5DB"}}/>{t}
+          </div>
+        ))}
+      </div>}
+      {wizard===1&&<div>
+        <div style={{fontSize:13,fontWeight:600,marginBottom:8}}>Select Period:</div>
+        {[{l:"July 2026",v:"PI-Q3"},{l:"August 2026",v:"PI-Q3"},{l:"September 2026",v:"PI-Q3"}].map((p,i)=>(
+          <div key={i} style={{padding:"10px 14px",border:"1px solid var(--gray-bdr)",borderRadius:8,marginBottom:8,cursor:"pointer",fontSize:13}} onClick={()=>setWizard(2)}>{p.l} (Parent: Q3 2026)</div>
+        ))}
+      </div>}
+      {wizard===2&&<div>
+        <div style={{fontSize:13,fontWeight:600,marginBottom:8}}>Select Entities:</div>
+        <div style={{padding:"10px 14px",border:"2px solid var(--blue)",borderRadius:8,marginBottom:8,fontSize:13,background:"var(--blue-bg)",cursor:"pointer"}} onClick={()=>setWizard(3)}>✅ All 20 entities</div>
+        <div style={{padding:"10px 14px",border:"1px solid var(--gray-bdr)",borderRadius:8,fontSize:13,color:"var(--muted)"}}>Select specific entities...</div>
+      </div>}
+      {wizard===3&&<div>
+        <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Review:</div>
+        <div className="info">
+          <div style={{fontWeight:700,color:"var(--blue)",marginBottom:6}}>THIS WILL CREATE:</div>
+          • 1 Process Instance (July 2026 Monthly Close)<br/>
+          • 262 Sub-Process Instances (13 per entity × 20 + 2 group-level)<br/>
+          • 526 Task Instances with all dependencies auto-mapped<br/>
+          • Assignments from template defaults
+        </div>
+        <button className="btn btn-p btn-full" style={{padding:14,fontSize:14}} onClick={()=>setWizard(4)}>Initiate July 2026 Close →</button>
+      </div>}
+      {wizard===4&&<div style={{textAlign:"center",padding:30}}>
+        <div style={{fontSize:48,marginBottom:12}}>✅</div>
+        <div style={{fontSize:18,fontWeight:700,color:"var(--green)"}}>July 2026 Monthly Close Initiated</div>
+        <div style={{fontSize:13,color:"var(--gray)",marginTop:6}}>1 process instance • 262 sub-process instances • 526 task instances created</div>
+        <div style={{fontSize:13,color:"var(--gray)",marginTop:2}}>All dependencies mapped. Assignments from template defaults.</div>
+        <button className="btn btn-o" style={{marginTop:16}} onClick={()=>setWizard(0)}>Initiate Another</button>
+      </div>}
+      {wizard<4&&wizard>0&&<button className="btn btn-o" style={{marginTop:12}} onClick={()=>setWizard(Math.max(0,wizard-1))}>← Back</button>}
+    </div>}
+  </div>);
+};
+
+// === MY TASKS DASHBOARD (Task Owner) ===
+const MyTasksDashboard=({onTaskClick})=>{
+  const mt=D.myTasks;
+  const Section=({title,color,icon,tasks,render})=>(
+    <div className="card" style={{marginBottom:14}}>
+      <div className="card-hd" style={{color}}>{icon} {title} ({tasks.length})</div>
+      {tasks.length===0?<div style={{fontSize:12,color:"var(--muted)",padding:"8px 0"}}>Nothing here.</div>:tasks.map(render)}
+    </div>
+  );
+  return(<div>
+    <div style={{marginBottom:20}}>
+      <div style={{fontSize:22,fontWeight:800}}>My Tasks</div>
+      <div style={{fontSize:13,color:"var(--gray)"}}>{mt.person} · {mt.role} · {mt.entityName} · June 2026 Close</div>
+    </div>
+
+    <Section title="Ready to Start" color="#7C3AED" icon="▶" tasks={mt.ready} render={t=>(
+      <div key={t.id} style={{padding:"12px",border:"1px solid #DDD6FE",background:"#F5F3FF",borderRadius:8,marginBottom:8}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <div style={{fontSize:14,fontWeight:700,flex:1}}>{t.name}</div>
+          <button className="btn btn-p" style={{padding:"5px 12px"}}>Start Task</button>
+        </div>
+        <div style={{fontSize:12,color:"var(--gray)",marginTop:4}}>{t.subProcess} · Due Day {t.dueDay} · {t.effortHrs}h · {t.deliverable}</div>
+        <div style={{fontSize:11,color:"var(--green)",marginTop:4}}>✓ {t.dependsMet} — ready to go</div>
+      </div>
+    )}/>
+
+    <Section title="In Progress" color="var(--blue)" icon="●" tasks={mt.inProgress} render={t=>(
+      <div key={t.id} style={{padding:"12px",border:"1px solid var(--blue-bdr)",background:"var(--blue-bg)",borderRadius:8,marginBottom:8}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <div style={{fontSize:14,fontWeight:700,flex:1}}>{t.name}</div>
+          <button className="btn btn-g" style={{padding:"5px 12px"}}>Mark Complete</button>
+        </div>
+        <div style={{fontSize:12,color:"var(--gray)",marginTop:4}}>{t.subProcess} · Due Day {t.dueDay} · Started {t.startedAt}</div>
+        <div style={{marginTop:8}}><PBar pct={t.progress} color="var(--blue)"/></div>
+      </div>
+    )}/>
+
+    <Section title="Waiting" color="var(--muted)" icon="○" tasks={mt.waiting} render={t=>(
+      <div key={t.id} style={{padding:"12px",border:"1px solid var(--gray-bdr)",background:"#FAFAFA",borderRadius:8,marginBottom:8}}>
+        <div style={{fontSize:14,fontWeight:700}}>{t.name}</div>
+        <div style={{fontSize:12,color:"var(--gray)",marginTop:4}}>{t.subProcess} · Due Day {t.dueDay}</div>
+        <div style={{fontSize:11,color:"var(--amber)",marginTop:4}}>⏳ Waiting on: {t.waitingOn}</div>
+      </div>
+    )}/>
+
+    {mt.blocking.length>0&&<div className="card" style={{background:"var(--amber-bg)",border:"1px solid var(--amber-bdr)"}}>
+      <div className="card-hd" style={{color:"var(--amber)"}}>⚠ You Are Blocking Others</div>
+      {mt.blocking.map((b,i)=>(
+        <div key={i} style={{fontSize:13,color:"#78350F",padding:"4px 0"}}>
+          <strong>{b.task}</strong> ({b.owner}) is waiting for your <strong>{b.waitingFor}</strong>.
+        </div>
+      ))}
+    </div>}
+
+    <Section title="Completed" color="var(--green)" icon="✓" tasks={mt.completed} render={t=>(
+      <div key={t.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 0",fontSize:13,color:"var(--gray)"}}>
+        <span style={{color:"var(--green)"}}>✓</span><span style={{textDecoration:"line-through"}}>{t.name}</span>
+        <span style={{fontSize:11,color:"var(--muted)"}}>· completed Day {t.completedDay}</span>
+      </div>
+    )}/>
+  </div>);
+};
+
+// === CONSOLIDATION DASHBOARD (Group Controller) ===
+const ConsolidationDashboard=({onEntClick})=>{
+  const tracker=D.signOffTracker;
+  const signedOff=tracker.filter(t=>t.signedOff);
+  const pending=tracker.filter(t=>!t.signedOff);
+  const blocked=pending.filter(t=>t.blocker);
+  const canConsolidate=pending.length===0;
+  return(<div>
+    <div style={{marginBottom:20}}>
+      <div style={{fontSize:22,fontWeight:800}}>Consolidation Readiness</div>
+      <div style={{fontSize:13,color:"var(--gray)"}}>June 2026 Close · Group Controller view</div>
+    </div>
+    <div className="stats">
+      <div className="stat" style={{borderLeftColor:"var(--green)"}}><div className="v">{signedOff.length}</div><div className="l">Signed Off</div></div>
+      <div className="stat" style={{borderLeftColor:"var(--blue)"}}><div className="v">{pending.length-blocked.length}</div><div className="l">In Progress</div></div>
+      <div className="stat" style={{borderLeftColor:"var(--red)"}}><div className="v">{blocked.length}</div><div className="l">Blocked</div></div>
+      <div className="stat" style={{borderLeftColor:canConsolidate?"var(--green)":"var(--amber)"}}><div className="v" style={{fontSize:18}}>{canConsolidate?"READY":"BLOCKED"}</div><div className="l">Consolidation</div></div>
+    </div>
+    <div className="info" style={{background:canConsolidate?"var(--green-bg)":"var(--amber-bg)",border:`1px solid ${canConsolidate?"var(--green-bdr)":"var(--amber-bdr)"}`,color:canConsolidate?"#064E3B":"#78350F"}}>
+      <strong>{canConsolidate?"All entities signed off.":`Consolidation cannot start until all 20 entities sign off. ${pending.length} remaining (${blocked.length} blocked).`}</strong> Group-level tasks (IC elimination, currency conversion, group statements) depend on every entity completing its sign-off.
+    </div>
+    <div className="card" style={{marginBottom:16}}>
+      <div className="card-hd">Entity Sign-Off Tracker</div>
+      <table className="dtbl"><thead><tr>{["Entity","Status","Signed By / Blocker","Action"].map(h=><th key={h}>{h}</th>)}</tr></thead>
+        <tbody>{tracker.map(t=>{const e=getEnt(t.id);return(
+          <tr key={t.id} style={{cursor:"pointer"}} onClick={()=>onEntClick(t.id)}>
+            <td style={{fontWeight:600}}>{bn(e?.brand)} {cn(e?.country)}</td>
+            <td>{t.signedOff?<Pill s="completed"/>:t.blocker?<Pill s="blocked"/>:<Pill s="in_progress"/>}</td>
+            <td style={{fontSize:12,color:t.blocker?"var(--red)":"var(--gray)"}}>{t.signedOff?`${t.signedBy} · ${t.at}`:t.blocker?`⚠ ${t.blocker}`:"In progress..."}</td>
+            <td>{t.signedOff?<span style={{fontSize:11,color:"var(--green)"}}>✓ Done</span>:<span style={{fontSize:11,color:"var(--blue)"}}>View →</span>}</td>
+          </tr>
+        )})}</tbody>
+      </table>
+    </div>
+    <div className="card">
+      <div className="card-hd">Group-Level Tasks (waiting on entity sign-offs)</div>
+      {["IC Elimination","Currency Conversion","Group Adjustments","Consolidated Statements","Board Pack"].map(t=>(
+        <div key={t} className="spr" style={{cursor:"default"}}>
+          <div style={{width:8,height:8,borderRadius:"50%",background:"#D1D5DB"}}/>
+          <div style={{flex:1,fontSize:13,fontWeight:500}}>{t}</div>
+          <Pill s="waiting"/>
+        </div>
+      ))}
+    </div>
+  </div>);
+};
+
+// === BLOCKER QUEUE DASHBOARD (Close Manager) ===
+const BlockerQueueDashboard=({onEntClick,onBlockerClick})=>{
+  const blockers=D.entityStatuses.filter(e=>e.blocker).map(e=>({...e,entity:getEnt(e.id)}));
+  const sorted=blockers.sort((a,b)=>(b.blocker.blocks?.length||0)-(a.blocker.blocks?.length||0));
+  return(<div>
+    <div style={{marginBottom:20}}>
+      <div style={{fontSize:22,fontWeight:800}}>Close Operations</div>
+      <div style={{fontSize:13,color:"var(--gray)"}}>June 2026 Close · Day 3 · Close Manager view</div>
+    </div>
+    <div className="stats">
+      <div className="stat" style={{borderLeftColor:"var(--red)"}}><div className="v">7</div><div className="l">Blocked Tasks</div></div>
+      <div className="stat" style={{borderLeftColor:"var(--amber)"}}><div className="v">4</div><div className="l">Entities at Risk</div></div>
+      <div className="stat" style={{borderLeftColor:"var(--navy)"}}><div className="v">+1.5d</div><div className="l">Critical Path Impact</div></div>
+      <div className="stat" style={{borderLeftColor:"var(--blue)"}}><div className="v">312<span style={{fontSize:14,color:"var(--muted)"}}>/526</span></div><div className="l">Tasks Done</div></div>
+    </div>
+    <div className="card">
+      <div className="card-hd" style={{color:"var(--red)"}}>Blocker Queue (sorted by impact)</div>
+      {sorted.map(es=>{
+        const sev=es.status==="at_risk"&&es.blocker.blocks?.length>=4?"red":"amber";
+        return(
+        <div key={es.id} style={{padding:14,border:`1px solid ${sev==="red"?"var(--red-bdr)":"var(--amber-bdr)"}`,background:sev==="red"?"var(--red-bg)":"var(--amber-bg)",borderRadius:8,marginBottom:10}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+            <span style={{fontSize:16}}>{sev==="red"?"🔴":"🟠"}</span>
+            <Badge brandId={es.entity.brand} size={28}/>
+            <div style={{flex:1}}>
+              <div style={{fontSize:14,fontWeight:700}}>{bn(es.entity.brand)} {cn(es.entity.country)} — {es.blocker.task}</div>
+              <div style={{fontSize:12,color:sev==="red"?"#7F1D1D":"#78350F"}}>Blocks {es.blocker.blocks?.length||0} downstream tasks: {es.blocker.blocks?.join(", ")}</div>
+            </div>
+          </div>
+          <div style={{fontSize:12,color:"var(--text2)",marginBottom:8,paddingLeft:36}}>{es.blocker.desc}</div>
+          <div style={{display:"flex",gap:8,paddingLeft:36}}>
+            <button className="btn btn-p" style={{padding:"5px 12px"}} onClick={()=>onBlockerClick(es.id)}>View & Resolve</button>
+            <button className="btn btn-o" style={{padding:"5px 12px"}}>Chase {es.blocker.resolutionAssignee?.split("(")[0]?.split(" ")[0]||"Owner"}</button>
+            <button className="btn btn-o" style={{padding:"5px 12px"}}>Reassign</button>
+          </div>
+        </div>
+      )})}
+    </div>
+  </div>);
+};
+
+// === TOP BAR ===
+const TopBar=({period,onPeriod,role,onRole})=>{
+  const[pOpen,setPOpen]=useState(false);
+  const[rOpen,setROpen]=useState(false);
+  const[procType,setProcType]=useState(PROCESS_TYPES[0]);
+  const[exp,setExp]=useState({"PI-FY2026":true,"PI-Q2":true});
+  const tog=(id,e)=>{e.stopPropagation();setExp(p=>({...p,[id]:!p[id]}))};
+
+  const renderNode=(n,depth=0)=>{
+    const ch=n.children&&n.children.length>0;
+    const isExp=exp[n.id];
+    const sel=period.id===n.id;
+    return(<div key={n.id}>
+      <div className={`irow${sel?" act":""}`} style={{marginLeft:depth*16}}
+        onClick={()=>{onPeriod(n);setPOpen(false)}}>
+        {ch?<span onClick={e=>tog(n.id,e)} style={{fontSize:10,color:"var(--muted)",transform:isExp?"rotate(90deg)":"none",transition:"transform 0.2s",display:"inline-block",width:14,cursor:"pointer"}}>▸</span>:<span style={{width:14}}/>}
+        <span style={{fontSize:13}}>{n.type==="annual"?"📅":n.type==="quarterly"?"📊":"📋"}</span>
+        <span style={{flex:1,fontSize:13,fontWeight:sel?700:500,color:sel?"var(--blue)":"var(--text2)"}}>{n.shortLabel}</span>
+        <InstPill inst={n}/>
+      </div>
+      {ch&&isExp&&n.children.map(c=>renderNode(c,depth+1))}
+    </div>);
+  };
+
+  return(<div className="topbar">
+    <div className="tb-left">
+      {/* Process Type Selector */}
+      <select className="fdrop" style={{padding:"10px 12px",fontSize:13,fontWeight:600,background:"var(--gray-bg)"}} value={procType.id}
+        onChange={e=>{const pt=PROCESS_TYPES.find(p=>p.id===e.target.value);if(pt.active)setProcType(pt)}}>
+        {PROCESS_TYPES.map(pt=><option key={pt.id} value={pt.id} disabled={!pt.active}>{pt.icon} {pt.name}{!pt.active?" (Coming Soon)":""}</option>)}
+      </select>
+      {/* Instance Drill-down Selector */}
+      <div className="psel">
+        <button className="psel-btn" onClick={()=>{setPOpen(!pOpen);setROpen(false)}}>
+          <span>📋</span><span>{period.label}</span><span style={{fontSize:11}}>▾</span>
+        </button>
+        {pOpen&&<div className="psel-menu">
+          <div style={{fontSize:10,fontWeight:700,color:"var(--muted)",padding:"6px 10px",letterSpacing:1}}>FINANCIAL CLOSE · SELECT PERIOD</div>
+          {INSTANCE_HIERARCHY.map(n=>renderNode(n))}
+          <div style={{borderTop:"1px solid var(--gray-bdr)",marginTop:6,padding:"8px 10px",fontSize:11,color:"var(--muted)"}}>2025 (archived) · earlier years available</div>
+        </div>}
+      </div>
+    </div>
+    <div className="tb-right">
+      <div className="search"><span>🔍</span><span>Search...</span></div>
+      <div className="rsel">
+        <button className="rsel-btn" onClick={()=>{setROpen(!rOpen);setPOpen(false)}}>
+          <span style={{width:24,height:24,borderRadius:"50%",background:"var(--navy)",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700}}>{role.name.split(" ").map(w=>w[0]).join("").substring(0,2)}</span>
+          <span>{role.name}</span><span style={{fontSize:11}}>▾</span>
+        </button>
+        {rOpen&&<div className="rsel-menu">
+          <div style={{fontSize:10,fontWeight:700,color:"var(--muted)",padding:"6px 10px",letterSpacing:1}}>VIEW AS ROLE</div>
+          {ROLES.map(r=>(
+            <div key={r.id} className={`rsel-item${role.id===r.id?" act":""}`} onClick={()=>{onRole(r);setROpen(false)}}>
+              <div style={{flex:1}}><div>{r.name}</div><div style={{fontSize:10,color:"var(--muted)"}}>{r.scope}</div></div>
+              {role.id===r.id&&<span>✓</span>}
+            </div>
+          ))}
+        </div>}
+      </div>
+    </div>
+  </div>);
+};
+
+// === MAIN APP ===
+const App=()=>{
+  const[tab,setTab]=useState("cmd");
+  const[view,setView]=useState("overview");
+  const[vd,setVD]=useState({});
+  const[col,setCol]=useState(false);
+  const[period,setPeriod]=useState(findInstance("PI-JUN")); // June default
+  const[role,setRole]=useState(ROLES[0]); // CFO default
+
+  const nav=(v,data={})=>{setView(v);setVD(data)};
+  const switchTab=t=>{setTab(t);setView("overview");setVD({})};
+
+  const bc=()=>{
+    const items=[{l:period.shortLabel,v:"overview"}];
+    if(["entity","task","loc"].includes(view)){
+      const e=getEnt(vd.eid);
+      items.push({l:`${bn(e?.brand)} ${cn(e?.country)}`,v:"entity",d:{eid:vd.eid}});
+    }
+    if(view==="task")items.push({l:vd.blocker?.task||"Task"});
+    if(view==="loc")items.push({l:vd.loc?.name||"Location"});
+    return items;
+  };
+
+  // Period-aware context chips
+  const dayChip=period.status==="active"?`Day ${period.currentDay} of 5`:period.status==="closed"?`Closed in ${period.closeDays} days`:period.status==="completed"?"All periods completed":period.status==="in_progress"?`${period.pct}% complete`:"Not yet started";
+  const statusChip=period.status==="active"?{t:"On Pace",c:"var(--green)"}:period.status==="closed"||period.status==="completed"?{t:"Completed",c:"var(--green)"}:period.status==="in_progress"?{t:"In Progress",c:"var(--blue)"}:{t:"Upcoming",c:"var(--muted)"};
+
+  return(<div className="app">
+    <Sidebar tab={tab} onTab={switchTab} col={col} onCol={()=>setCol(!col)} roleId={role.id}/>
+    <div className={`mn${col?" exp":""}`}>
+      <TopBar period={period} onPeriod={p=>{setPeriod(p);setView("overview")}} role={role} onRole={r=>{setRole(r);setView("overview");setTab((NAV_BY_ROLE[r.id]||NAV_BY_ROLE.cfo)[0].id)}}/>
+
+      {tab==="cmd"&&view!=="overview"&&<div className="bc">
+        {bc().map((b,i)=><React.Fragment key={i}>
+          {i>0&&<span style={{color:"#D1D5DB"}}>›</span>}
+          {i<bc().length-1?<a onClick={()=>nav(b.v,b.d||{})}>{b.l}</a>:<span className="cur">{b.l}</span>}
+        </React.Fragment>)}
+      </div>}
+
+      {tab==="cmd"&&view==="overview"&&(()=>{
+        // PERSONA ROUTING: each role lands on a different dashboard
+        const rid=role.id;
+        // Task Owner → personal to-do list (no period context strip)
+        if(rid==="task_owner")return <MyTasksDashboard onTaskClick={()=>{}}/>;
+        // Entity Controller → straight to their entity detail
+        if(rid==="entity_ctrl")return <div>
+          <div className="ctxstrip"><div className="title">My Entity</div><div className="chip">⏱ {dayChip}</div><div className="chip" style={{color:statusChip.c}}>● {statusChip.t}</div></div>
+          <EntDetail eid="TOY-UAE" nav={nav}/>
+        </div>;
+        // Group Controller → consolidation readiness
+        if(rid==="group")return <ConsolidationDashboard onEntClick={id=>nav("entity",{eid:id})}/>;
+        // Close Manager → blocker queue
+        if(rid==="close_mgr")return <BlockerQueueDashboard onEntClick={id=>nav("entity",{eid:id})} onBlockerClick={id=>{const es=getES(id);nav("task",{eid:id,blocker:es.blocker})}}/>;
+        // CFO (and default) → portfolio dashboard
+        return(<div>
+          <div className="ctxstrip">
+            <div className="title">{period.label}</div>
+            {period.parent&&<div className="chip">📅 {period.parent}</div>}
+            <div className="chip">⏱ {dayChip}</div>
+            <div className="chip" style={{color:statusChip.c}}>● {statusChip.t}</div>
+          </div>
+          {period.type!=="monthly"?(
+            <div>
+              <div style={{display:"flex",gap:20,marginBottom:20,flexWrap:"wrap"}}>
+                <div className="card" style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minWidth:220,padding:30}}>
+                  <Ring pct={period.pct} size={150}/>
+                  <div style={{fontSize:14,fontWeight:700,marginTop:14}}>{period.shortLabel} Progress</div>
+                </div>
+                <div className="card" style={{flex:1,minWidth:280}}>
+                  <div className="card-hd">{period.type==="annual"?"Quarters":"Months"} in {period.shortLabel}</div>
+                  {(period.children||[]).map(child=>(
+                    <div key={child.id} className="spr" onClick={()=>setPeriod(child)}>
+                      <span style={{fontSize:14}}>{child.type==="quarterly"?"📊":"📋"}</span>
+                      <div style={{flex:1,fontSize:13,fontWeight:600}}>{child.shortLabel}</div>
+                      <div style={{width:120}}><PBar pct={child.pct} color={instStatusColor(child.status)}/></div>
+                      <InstPill inst={child}/>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {D.pace.actuals[period.id]&&D.pace.actuals[period.id].arr.length>0&&(
+                <div style={{marginBottom:20}}>
+                  <PaceChart periodId={period.id} periodType={period.type} statusNote={period.type==="quarterly"?"Across 3 months + add-ons":"Across 4 quarters + add-ons"}/>
+                </div>
+              )}
+              <div className="info">
+                <strong>This is a {period.type} view.</strong> {period.type==="annual"?"The pace chart tracks task completion across all four quarters plus annual add-ons (audit, statutory, tax). Click any quarter to drill into its months, or a month for live entity tracking.":"The pace chart tracks task completion across April, May, June, plus the Q2 add-on tasks (provisions, compliance, board report) that begin only after June closes. Click a month for live entity tracking."}
+              </div>
+            </div>
+          ):(
+            period.status==="upcoming"?(
+              <div className="card" style={{textAlign:"center",padding:50}}>
+                <div style={{fontSize:40,marginBottom:12}}>🗓️</div>
+                <div style={{fontSize:16,fontWeight:700}}>{period.label} hasn't started yet</div>
+                <div style={{fontSize:13,color:"var(--gray)",marginTop:6}}>This close cycle is scheduled to begin on the first business day of the period. Initiate it early from Configuration → Initiate Close.</div>
+              </div>
+            ):(
+              <Overview onEntClick={id=>nav("entity",{eid:id})} onBlockerClick={id=>{const es=getES(id);nav("task",{eid:id,blocker:es.blocker})}} roleId={role.id} closed={period.status==="closed"} periodId={period.id} periodType="monthly" statusNote={period.status==="closed"?(period.closeDays<5?`Closed Day ${period.closeDays} · 1 Day Early`:`Closed Day ${period.closeDays} · On Target`):"Live · Day 3"}/>
+            )
+          )}
+        </div>);
+      })()}
+      {tab==="cmd"&&view==="entity"&&<EntDetail eid={vd.eid} nav={nav}/>}
+      {tab==="cmd"&&view==="task"&&<TaskDetail eid={vd.eid} blocker={vd.blocker}/>}
+      {tab==="cmd"&&view==="loc"&&<LocDetail loc={vd.loc} lid={vd.lid}/>}
+      {tab==="flow"&&<Flow period={period} roleId={role.id}/>}
+      {tab==="dag"&&<DAG period={period}/>}
+      {tab==="cfg"&&<Config canEdit={role.id==="admin"}/>}
+    </div>
+  </div>);
+};
+
+ReactDOM.render(<App/>,document.getElementById('root'));
+</script>
+</body>
+</html>
