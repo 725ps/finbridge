@@ -22,7 +22,7 @@ table{border-collapse:collapse;width:100%}
 .app{display:flex;min-height:100vh}
 
 /* Sidebar */
-.sb{width:260px;background:var(--navy);color:#fff;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:50;transition:width 0.3s ease;overflow:hidden}
+.sb{width:260px;background:var(--navy);color:#fff;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:50;transition:width 0.3s ease,transform 0.3s ease;overflow:hidden}
 .sb.col{width:64px}
 .sb-hd{padding:20px;border-bottom:1px solid rgba(255,255,255,0.08);min-height:80px}
 .sb-logo{height:28px;margin-bottom:6px;opacity:0.9}
@@ -192,6 +192,11 @@ table{border-collapse:collapse;width:100%}
 /* Tooltip for collapsed */
 .tip{position:relative}
 
+.mobile-bar{display:none;position:fixed;top:0;left:0;right:0;height:52px;background:var(--navy);z-index:45;align-items:center;gap:14px;padding:0 16px}
+.hamburger{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:4px 8px;line-height:1}
+.mobile-brand{font-size:18px;font-weight:800;letter-spacing:-0.5px}
+.sb-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:48}
+
 /* Responsive */
 @media(max-width:1024px){.sb{width:64px}.sb .sb-brand,.sb .sb-title,.sb-item span:not(.ic),.sb-badge,.sb-ctx{display:none}.sb-hd{padding:16px 0;text-align:center}.sb-logo{margin:0 auto}.sb-item{justify-content:center;padding:12px 0}.mn{margin-left:64px}.hero{grid-template-columns:1fr}.twocol{grid-template-columns:1fr}}
 @media(max-width:600px){
@@ -210,10 +215,6 @@ table{border-collapse:collapse;width:100%}
   .tb-search,.search{display:none}
   .psel-menu{left:0;right:auto}
 }
-.mobile-bar{display:none;position:fixed;top:0;left:0;right:0;height:52px;background:var(--navy);z-index:45;align-items:center;gap:14px;padding:0 16px}
-.hamburger{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:4px 8px;line-height:1}
-.mobile-brand{font-size:18px;font-weight:800;letter-spacing:-0.5px}
-.sb-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:48}
 </style>
 </head>
 <body>
