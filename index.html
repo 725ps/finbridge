@@ -214,6 +214,8 @@ table{border-collapse:collapse;width:100%}
   .tb-left{width:100%}.tb-right{width:100%;justify-content:space-between}
   .tb-search,.search{display:none}
   .psel-menu{left:0;right:auto}
+  .dtbl{display:block;overflow-x:auto;white-space:nowrap}
+  .card{overflow-x:auto}
 }
 </style>
 </head>
@@ -221,7 +223,18 @@ table{border-collapse:collapse;width:100%}
 <div id="root"></div>
 <script src="js/data.js"></script>
 <script type="text/babel">
-const {useState,useMemo,useCallback}=React;
+const {useState,useMemo,useCallback,useEffect}=React;
+
+// Detect narrow viewport for mobile-specific layouts
+const useIsMobile=()=>{
+  const[m,setM]=useState(typeof window!=="undefined"&&window.innerWidth<=600);
+  useEffect(()=>{
+    const h=()=>setM(window.innerWidth<=600);
+    window.addEventListener("resize",h);
+    return()=>window.removeEventListener("resize",h);
+  },[]);
+  return m;
+};
 const D=window.FINOPS_DATA;
 
 // === HELPERS ===
@@ -671,6 +684,7 @@ const LocDetail=({loc,lid})=>{
 // === PROCESS FLOW ===
 const Flow=({period,roleId})=>{
   const[sel,setSel]=useState(null);
+  const isMobile=useIsMobile();
   const isITOps=roleId==="it_ops";
   const SC2={healthy:"var(--green)",failed:"var(--red)",delayed:"var(--amber)",waiting:"var(--muted)"};
   // Period-aware health: live June shows real failures; closed months are all healthy; upcoming = idle
@@ -725,6 +739,21 @@ const Flow=({period,roleId})=>{
         <button className="btn btn-o" style={{padding:"5px 12px"}}>Escalate</button>
       </div>
     </div>}
+    {isMobile?(
+      /* Mobile: stacked system list grouped by relationship to S/4HANA */
+      <div>
+        {nodes.map(n=>(
+          <div key={n.id} onClick={()=>setSel(n.id===sel?null:n.id)} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",marginBottom:8,borderRadius:10,background:n.core?"var(--navy)":"var(--white)",border:n.core?"none":`2px solid ${SC2[n.st]}`,cursor:"pointer"}}>
+            <span style={{width:10,height:10,borderRadius:"50%",background:SC2[n.st],flexShrink:0}}/>
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:700,color:n.core?"#fff":"var(--text)"}}>{n.lb}{n.core?"  (hub)":""}</div>
+              <div style={{fontSize:10,color:n.core?"#93C5FD":"var(--muted)"}}>{n.sub}</div>
+            </div>
+            <span style={{fontSize:10,fontWeight:600,color:SC2[n.st],textTransform:"capitalize"}}>{n.st}</span>
+          </div>
+        ))}
+      </div>
+    ):(
     <div style={{position:"relative",minHeight:420,background:"var(--white)",borderRadius:"var(--r)",border:"1px solid var(--gray-bdr)",padding:20}}>
       <svg style={{position:"absolute",inset:0,width:"100%",height:"100%",zIndex:1,pointerEvents:"none"}}>
         <defs><marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#94A3B8"/></marker></defs>
@@ -744,6 +773,7 @@ const Flow=({period,roleId})=>{
         <div style={{fontSize:9,color:n.core?"#93C5FD":"var(--muted)",marginTop:2}}>{n.sub}</div>
       </div>)}
     </div>
+    )}
     {sel&&(()=>{
       const sys=D.systems.find(s=>s.id===sel);
       const syncStatus=isClosed?"healthy":sys.syncStatus;
@@ -796,6 +826,7 @@ const Flow=({period,roleId})=>{
 
 // === PROCESS DAG ===
 const DAG=({period})=>{
+  const isMobile=useIsMobile();
   const ptype=period?.type||"monthly";
   const isLive=period?.status==="active";
   const isClosed=period?.status==="closed"||period?.status==="completed";
@@ -832,10 +863,10 @@ const DAG=({period})=>{
   return(<div>
     <div style={{fontSize:22,fontWeight:800,marginBottom:4}}>Process Dependency Graph</div>
     <div style={{fontSize:13,color:"var(--gray)",marginBottom:20}}>{period?.label} • {subtitle}</div>
-    <div className="card" style={{overflowX:"auto"}}>
-      <div style={{display:"flex",gap:16,minWidth:dayCols.length*170,padding:"8px 0"}}>
-        {dayCols.map(day=><div key={day} style={{flex:1,minWidth:155}}>
-          <div style={{fontSize:11,fontWeight:700,color:day>=6?"var(--amber)":"var(--blue)",marginBottom:10,textAlign:"center",padding:"4px 8px",background:day>=6?"var(--amber-bg)":"var(--blue-bg)",borderRadius:4}}>{colLabels[day]}</div>
+    <div className="card" style={isMobile?{}:{overflowX:"auto"}}>
+      <div style={isMobile?{padding:"8px 0"}:{display:"flex",gap:16,minWidth:dayCols.length*170,padding:"8px 0"}}>
+        {dayCols.map(day=><div key={day} style={isMobile?{marginBottom:18}:{flex:1,minWidth:155}}>
+          <div style={{fontSize:11,fontWeight:700,color:day>=6?"var(--amber)":"var(--blue)",marginBottom:10,textAlign:isMobile?"left":"center",padding:"4px 8px",background:day>=6?"var(--amber-bg)":"var(--blue-bg)",borderRadius:4}}>{colLabels[day]}{isMobile?` (${(cols[day]||[]).length})`:""}</div>
           {(cols[day]||[]).map(t=>{const st=statusFor(t);return(
             <div key={t.id} style={{background:sColor(st)+"1A",border:`1.5px solid ${sColor(st)}`,borderRadius:8,padding:"8px 10px",marginBottom:6,fontSize:11}}>
               <div style={{fontWeight:700,color:"var(--text)",marginBottom:2}}>{t.name}</div>
