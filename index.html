@@ -211,9 +211,10 @@ table{border-collapse:collapse;width:100%}
   .egrid{grid-template-columns:1fr}.stats{flex-direction:column}.hero-stats{grid-template-columns:1fr 1fr}.psel-menu{min-width:280px;max-width:calc(100vw - 40px)}
   .sb-toggle{display:none}
   .topbar{flex-direction:column;align-items:stretch;gap:10px}
-  .tb-left{width:100%}.tb-right{width:100%;justify-content:space-between}
+  .tb-left{width:100%}.tb-right{width:100%;justify-content:flex-start}
   .tb-search,.search{display:none}
   .psel-menu{left:0;right:auto}
+  .rsel-menu{left:0;right:auto;min-width:240px;max-width:calc(100vw - 32px)}
   .dtbl{display:block;overflow-x:auto;white-space:nowrap}
   .card{overflow-x:auto}
 }
@@ -686,6 +687,20 @@ const Flow=({period,roleId})=>{
   const[sel,setSel]=useState(null);
   const isMobile=useIsMobile();
   const isITOps=roleId==="it_ops";
+  const detailRef=React.useRef(null);
+  // Select a system; if opening (not closing), smooth-scroll the detail into view.
+  const selectSys=id=>{
+    const opening=id!==sel;
+    setSel(opening?id:null);
+    if(opening){
+      setTimeout(()=>{
+        if(detailRef.current){
+          const top=detailRef.current.getBoundingClientRect().top+window.scrollY-70; // offset for mobile top bar
+          window.scrollTo({top,behavior:"smooth"});
+        }
+      },60);
+    }
+  };
   const SC2={healthy:"var(--green)",failed:"var(--red)",delayed:"var(--amber)",waiting:"var(--muted)"};
   // Period-aware health: live June shows real failures; closed months are all healthy; upcoming = idle
   const isLive=period?.status==="active";
@@ -743,7 +758,7 @@ const Flow=({period,roleId})=>{
       /* Mobile: stacked system list grouped by relationship to S/4HANA */
       <div>
         {nodes.map(n=>(
-          <div key={n.id} onClick={()=>setSel(n.id===sel?null:n.id)} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",marginBottom:8,borderRadius:10,background:n.core?"var(--navy)":"var(--white)",border:n.core?"none":`2px solid ${SC2[n.st]}`,cursor:"pointer"}}>
+          <div key={n.id} onClick={()=>selectSys(n.id)} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",marginBottom:8,borderRadius:10,background:n.core?"var(--navy)":"var(--white)",border:n.core?"none":`2px solid ${SC2[n.st]}`,cursor:"pointer"}}>
             <span style={{width:10,height:10,borderRadius:"50%",background:SC2[n.st],flexShrink:0}}/>
             <div style={{flex:1}}>
               <div style={{fontSize:13,fontWeight:700,color:n.core?"#fff":"var(--text)"}}>{n.lb}{n.core?"  (hub)":""}</div>
@@ -767,7 +782,7 @@ const Flow=({period,roleId})=>{
         <line x1="58%" y1="45%" x2="75%" y2="62%" stroke={ln("waiting","healthy")} strokeWidth="1.5" markerEnd="url(#arr)" strokeDasharray="5"/>
         <line x1="58%" y1="48%" x2="75%" y2="84%" stroke={ln("healthy","healthy")} strokeWidth="1.5" markerEnd="url(#arr)" strokeDasharray="5"/>
       </svg>
-      {nodes.map(n=><div key={n.id} className="fnode" style={{left:n.x,top:n.y,width:n.w,background:n.core?"var(--navy)":"var(--white)",border:n.core?"none":`2px solid ${SC2[n.st]}`,boxShadow:sel===n.id?"0 4px 20px rgba(0,0,0,0.15)":"var(--shadow)",transform:sel===n.id?"scale(1.06)":"scale(1)",zIndex:sel===n.id?10:2}} onClick={()=>setSel(n.id===sel?null:n.id)}>
+      {nodes.map(n=><div key={n.id} className="fnode" style={{left:n.x,top:n.y,width:n.w,background:n.core?"var(--navy)":"var(--white)",border:n.core?"none":`2px solid ${SC2[n.st]}`,boxShadow:sel===n.id?"0 4px 20px rgba(0,0,0,0.15)":"var(--shadow)",transform:sel===n.id?"scale(1.06)":"scale(1)",zIndex:sel===n.id?10:2}} onClick={()=>selectSys(n.id)}>
         <div style={{width:10,height:10,borderRadius:"50%",background:SC2[n.st],position:"absolute",top:-5,right:-5,border:"2px solid var(--white)"}}/>
         <div style={{fontSize:n.core?13:11,fontWeight:700,color:n.core?"#fff":"var(--text)"}}>{n.lb}</div>
         <div style={{fontSize:9,color:n.core?"#93C5FD":"var(--muted)",marginTop:2}}>{n.sub}</div>
@@ -779,7 +794,7 @@ const Flow=({period,roleId})=>{
       const syncStatus=isClosed?"healthy":sys.syncStatus;
       const syncLabel={healthy:"Sync Completed",failed:"Sync Failed",delayed:"Sync Delayed",waiting:"Awaiting Sync"}[syncStatus];
       const syncColor=SC2[syncStatus];
-      return(<div className="card" style={{marginTop:16}}>
+      return(<div ref={detailRef} className="card" style={{marginTop:16}}>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
           <div className="card-hd" style={{margin:0}}>{sys.name}</div>
           <span style={{fontSize:10,fontWeight:500,color:"var(--gray)",background:"#F3F4F6",padding:"2px 8px",borderRadius:4}}>{sys.tier}</span>
