@@ -9,6 +9,36 @@
 <link rel="apple-touch-icon" href="assets/logos/finbridge-tile.png">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231B2A4A'/><path d='M5 22 L27 22 M10 22 L10 9 M22 22 L22 9' stroke='white' stroke-width='2' fill='none' stroke-linecap='round'/><path d='M5 17 Q10 10 16 16 Q22 22 27 8' stroke='%232563EB' stroke-width='2.2' fill='none' stroke-linecap='round'/><path d='M27 8 l-3.5 1 M27 8 l-1 3.5' stroke='%232563EB' stroke-width='2.2' fill='none' stroke-linecap='round'/></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<!-- ============================================================
+     ANALYTICS (Google Analytics 4)
+     TODO: replace G-XXXXXXXXXX on the LINE BELOW (the GA_MEASUREMENT_ID
+     line ONLY) with your real Measurement ID from analytics.google.com.
+     Do NOT edit the line after it — that one compares against the
+     placeholder to detect whether a real ID was set.
+     Until you set it, analytics is simply inactive — nothing breaks.
+     ============================================================ -->
+<script>
+  window.GA_MEASUREMENT_ID = "G-V48XCT10ZD"; // <-- PASTE YOUR GA4 ID HERE
+  window.FB_ANALYTICS_ON = window.GA_MEASUREMENT_ID && window.GA_MEASUREMENT_ID !== "G-XXXXXXXXXX";
+</script>
+<script>
+  if (window.FB_ANALYTICS_ON) {
+    var gaScript = document.createElement("script");
+    gaScript.async = true;
+    gaScript.src = "https://www.googletagmanager.com/gtag/js?id=" + window.GA_MEASUREMENT_ID;
+    document.head.appendChild(gaScript);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function(){ dataLayer.push(arguments); };
+    gtag("js", new Date());
+    gtag("config", window.GA_MEASUREMENT_ID);
+  }
+  // Safe tracker: no-op until a real ID is set, so the app never breaks.
+  window.track = function(event, params){
+    try { if (window.FB_ANALYTICS_ON && window.gtag) window.gtag("event", event, params || {}); } catch(e){}
+  };
+</script>
+
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -221,7 +251,16 @@ table{border-collapse:collapse;width:100%}
 </style>
 </head>
 <body>
-<div id="root"></div>
+<div id="root">
+  <div id="boot-splash" style="position:fixed;inset:0;background:#1B2A4A;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;font-family:'Inter',-apple-system,sans-serif">
+    <div style="font-size:32px;font-weight:800;letter-spacing:-1px;margin-bottom:18px"><span style="color:#fff">Fin</span><span style="color:#5B9BF5">Bridge</span></div>
+    <div style="width:140px;height:3px;background:rgba(255,255,255,0.15);border-radius:2px;overflow:hidden">
+      <div style="width:40%;height:100%;background:#5B9BF5;border-radius:2px;animation:bootslide 1s ease-in-out infinite"></div>
+    </div>
+    <div style="color:#93C5FD;font-size:12px;margin-top:16px;letter-spacing:0.5px">Loading…</div>
+  </div>
+</div>
+<style>@keyframes bootslide{0%{margin-left:-40%}100%{margin-left:140%}}</style>
 <script src="js/data.js"></script>
 <script type="text/babel">
 const {useState,useMemo,useCallback,useEffect}=React;
@@ -727,6 +766,7 @@ const Flow=({period,roleId})=>{
     const opening=id!==sel;
     setSel(opening?id:null);
     if(opening){
+      track("view_system",{system:id});
       setTimeout(()=>{
         if(detailRef.current){
           const top=detailRef.current.getBoundingClientRect().top+window.scrollY-70; // offset for mobile top bar
@@ -915,7 +955,7 @@ const DAG=({period})=>{
   const selectTask=t=>{
     const opening=!selTask||selTask.id!==t.id;
     setSelTask(opening?t:null);
-    if(opening){setTimeout(()=>{if(taskDetailRef.current){const top=taskDetailRef.current.getBoundingClientRect().top+window.scrollY-70;window.scrollTo({top,behavior:"smooth"});}},60);}
+    if(opening){track("view_task",{task:t.id,name:t.name});setTimeout(()=>{if(taskDetailRef.current){const top=taskDetailRef.current.getBoundingClientRect().top+window.scrollY-70;window.scrollTo({top,behavior:"smooth"});}},60);}
   };
 
   return(<div>
@@ -1285,6 +1325,32 @@ const Config=({canEdit})=>{
 // === MY TASKS DASHBOARD (Task Owner) ===
 const MyTasksDashboard=({onTaskClick})=>{
   const mt=D.myTasks;
+  const[expT,setExpT]=useState(null);
+  const detRef=React.useRef(null);
+  const toggleT=id=>{
+    const opening=expT!==id;
+    setExpT(opening?id:null);
+    if(opening){setTimeout(()=>{if(detRef.current){const top=detRef.current.getBoundingClientRect().top+window.scrollY-70;window.scrollTo({top,behavior:"smooth"});}},60);}
+  };
+  // Inline detail for a task — pulls real dependency + data contract from templates where available
+  const TaskDetailInline=({id})=>{
+    const tmpl=taskById(id);
+    const e=enrich(id);
+    const blocks=tasksBlockedBy(id);
+    return(<div ref={detRef} style={{marginTop:10,padding:"10px 12px",background:"var(--white)",border:"1px solid var(--gray-bdr)",borderRadius:6,fontSize:11.5}}>
+      {tmpl&&<div style={{marginBottom:5}}><span style={{color:"var(--muted)"}}>Scheduled: </span>Day {tmpl.targetDay} — {depBasis(tmpl).text}</div>}
+      <div style={{display:"flex",gap:18,flexWrap:"wrap",marginBottom:e?6:0}}>
+        <div><span style={{color:"var(--muted)"}}>Depends on: </span>{tmpl&&tmpl.dependsOn?.length?tmpl.dependsOn.map(taskNameById).join(", "):<span style={{color:"var(--muted)"}}>Nothing</span>}</div>
+        <div><span style={{color:"var(--muted)"}}>Blocks: </span>{blocks.length?blocks.join(", "):<span style={{color:"var(--muted)"}}>Nothing downstream</span>}</div>
+      </div>
+      {e&&<div style={{marginTop:6,padding:"8px 10px",background:"var(--gray-bg)",borderRadius:6}}>
+        <div style={{fontSize:9,fontWeight:700,color:"var(--muted)",letterSpacing:1,marginBottom:6}}>DATA CONTRACT</div>
+        <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{fontSize:10,fontWeight:700,color:"var(--blue)",width:46,flexShrink:0}}>READS</span><span>{e.reads.map((r,i)=><span key={i}>{i>0&&", "}<strong>{r.sys}</strong>: {r.obj}</span>)}</span></div>
+        <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{fontSize:10,fontWeight:700,color:"var(--amber)",width:46,flexShrink:0}}>DOES</span><span>{e.transform}</span></div>
+        <div style={{display:"flex",gap:8}}><span style={{fontSize:10,fontWeight:700,color:"var(--green)",width:46,flexShrink:0}}>WRITES</span><span>{e.writes.map((w,i)=><span key={i}>{i>0&&", "}<strong>{w.sys}</strong>: {w.obj}</span>)}</span></div>
+      </div>}
+    </div>);
+  };
   const Section=({title,color,icon,tasks,render})=>(
     <div className="card" style={{marginBottom:14}}>
       <div className="card-hd" style={{color}}>{icon} {title} ({tasks.length})</div>
@@ -1298,32 +1364,35 @@ const MyTasksDashboard=({onTaskClick})=>{
     </div>
 
     <Section title="Ready to Start" color="#7C3AED" icon="▶" tasks={mt.ready} render={t=>(
-      <div key={t.id} style={{padding:"12px",border:"1px solid #DDD6FE",background:"#F5F3FF",borderRadius:8,marginBottom:8}}>
+      <div key={t.id} onClick={()=>toggleT(t.id)} style={{padding:"12px",border:`1px solid ${expT===t.id?"var(--navy)":"#DDD6FE"}`,background:"#F5F3FF",borderRadius:8,marginBottom:8,cursor:"pointer"}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           <div style={{fontSize:14,fontWeight:700,flex:1}}>{t.name}</div>
-          <button className="btn btn-p" style={{padding:"5px 12px"}}>Start Task</button>
+          <button className="btn btn-p" style={{padding:"5px 12px"}} onClick={ev=>ev.stopPropagation()}>Start Task</button>
         </div>
         <div style={{fontSize:12,color:"var(--gray)",marginTop:4}}>{t.subProcess} · Due Day {t.dueDay} · {t.effortHrs}h · {t.deliverable}</div>
         <div style={{fontSize:11,color:"var(--green)",marginTop:4}}>✓ {t.dependsMet} — ready to go</div>
+        {expT===t.id&&<TaskDetailInline id={t.id}/>}
       </div>
     )}/>
 
     <Section title="In Progress" color="var(--blue)" icon="●" tasks={mt.inProgress} render={t=>(
-      <div key={t.id} style={{padding:"12px",border:"1px solid var(--blue-bdr)",background:"var(--blue-bg)",borderRadius:8,marginBottom:8}}>
+      <div key={t.id} onClick={()=>toggleT(t.id)} style={{padding:"12px",border:`1px solid ${expT===t.id?"var(--navy)":"var(--blue-bdr)"}`,background:"var(--blue-bg)",borderRadius:8,marginBottom:8,cursor:"pointer"}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           <div style={{fontSize:14,fontWeight:700,flex:1}}>{t.name}</div>
-          <button className="btn btn-g" style={{padding:"5px 12px"}}>Mark Complete</button>
+          <button className="btn btn-g" style={{padding:"5px 12px"}} onClick={ev=>ev.stopPropagation()}>Mark Complete</button>
         </div>
         <div style={{fontSize:12,color:"var(--gray)",marginTop:4}}>{t.subProcess} · Due Day {t.dueDay} · Started {t.startedAt}</div>
         <div style={{marginTop:8}}><PBar pct={t.progress} color="var(--blue)"/></div>
+        {expT===t.id&&<TaskDetailInline id={t.id}/>}
       </div>
     )}/>
 
     <Section title="Waiting" color="var(--muted)" icon="○" tasks={mt.waiting} render={t=>(
-      <div key={t.id} style={{padding:"12px",border:"1px solid var(--gray-bdr)",background:"#FAFAFA",borderRadius:8,marginBottom:8}}>
+      <div key={t.id} onClick={()=>toggleT(t.id)} style={{padding:"12px",border:`1px solid ${expT===t.id?"var(--navy)":"var(--gray-bdr)"}`,background:"#FAFAFA",borderRadius:8,marginBottom:8,cursor:"pointer"}}>
         <div style={{fontSize:14,fontWeight:700}}>{t.name}</div>
         <div style={{fontSize:12,color:"var(--gray)",marginTop:4}}>{t.subProcess} · Due Day {t.dueDay}</div>
         <div style={{fontSize:11,color:"var(--amber)",marginTop:4}}>⏳ Waiting on: {t.waitingOn}</div>
+        {expT===t.id&&<TaskDetailInline id={t.id}/>}
       </div>
     )}/>
 
@@ -1507,8 +1576,18 @@ const App=()=>{
   const[period,setPeriod]=useState(findInstance("PI-JUN")); // June default
   const[role,setRole]=useState(ROLES[0]); // CFO default
 
-  const nav=(v,data={})=>{setView(v);setVD(data)};
-  const switchTab=t=>{setTab(t);setView("overview");setVD({})};
+  // On mobile, briefly reveal the nav drawer on first load so the tabs are discoverable, then close it.
+  useEffect(()=>{
+    if(typeof window!=="undefined"&&window.innerWidth<=600){
+      const openTimer=setTimeout(()=>setMobileOpen(true),400);
+      const closeTimer=setTimeout(()=>setMobileOpen(false),1900);
+      return()=>{clearTimeout(openTimer);clearTimeout(closeTimer);};
+    }
+  },[]);
+
+  const scrollTop=()=>{window.scrollTo({top:0,behavior:"auto"});setTimeout(()=>window.scrollTo({top:0,behavior:"auto"}),0);};
+  const nav=(v,data={})=>{setView(v);setVD(data);scrollTop();track("navigate",{view:v,detail:data.eid||data.lid||(data.blocker&&data.blocker.task)||""});};
+  const switchTab=t=>{setTab(t);setView("overview");setVD({});scrollTop();track("view_tab",{tab:t});};
 
   const bc=()=>{
     const items=[{l:period.shortLabel,v:"overview"}];
@@ -1528,14 +1607,14 @@ const App=()=>{
   return(<div className="app">
     {/* Mobile top bar with hamburger */}
     <div className="mobile-bar">
-      <button className="hamburger" onClick={()=>setMobileOpen(true)} aria-label="Open menu">☰</button>
+      <button className="hamburger" onClick={()=>setMobileOpen(true)} aria-label="Open menu">☰<span style={{fontSize:13,fontWeight:600,marginLeft:7}}>Menu</span></button>
       <div className="mobile-brand"><span style={{color:"#fff"}}>Fin</span><span style={{color:"#5B9BF5"}}>Bridge</span></div>
     </div>
     {/* Backdrop when drawer open */}
     {mobileOpen&&<div className="sb-backdrop" onClick={()=>setMobileOpen(false)}/>}
     <Sidebar tab={tab} onTab={t=>{switchTab(t);setMobileOpen(false)}} col={col} onCol={()=>setCol(!col)} roleId={role.id} mobileOpen={mobileOpen}/>
     <div className={`mn${col?" exp":""}`}>
-      <TopBar period={period} onPeriod={p=>{setPeriod(p);setView("overview")}} role={role} onRole={r=>{setRole(r);setView("overview");setTab((NAV_BY_ROLE[r.id]||NAV_BY_ROLE.cfo)[0].id);setMobileOpen(false)}}/>
+      <TopBar period={period} onPeriod={p=>{setPeriod(p);setView("overview");track("change_period",{period:p.id});}} role={role} onRole={r=>{setRole(r);setView("overview");setTab((NAV_BY_ROLE[r.id]||NAV_BY_ROLE.cfo)[0].id);setMobileOpen(false);track("switch_persona",{role:r.id});}}/>
 
       {tab==="cmd"&&view!=="overview"&&<div className="bc">
         {bc().map((b,i)=><React.Fragment key={i}>
