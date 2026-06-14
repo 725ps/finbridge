@@ -251,15 +251,14 @@ table{border-collapse:collapse;width:100%}
 </style>
 </head>
 <body>
-<div id="root">
-  <div id="boot-splash" style="position:fixed;inset:0;background:#1B2A4A;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;font-family:'Inter',-apple-system,sans-serif">
-    <div style="font-size:32px;font-weight:800;letter-spacing:-1px;margin-bottom:18px"><span style="color:#fff">Fin</span><span style="color:#5B9BF5">Bridge</span></div>
-    <div style="width:140px;height:3px;background:rgba(255,255,255,0.15);border-radius:2px;overflow:hidden">
-      <div style="width:40%;height:100%;background:#5B9BF5;border-radius:2px;animation:bootslide 1s ease-in-out infinite"></div>
-    </div>
-    <div style="color:#93C5FD;font-size:12px;margin-top:16px;letter-spacing:0.5px">Loading…</div>
+<div id="boot-splash" style="position:fixed;inset:0;background:#1B2A4A;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;font-family:'Inter',-apple-system,sans-serif">
+  <div style="font-size:32px;font-weight:800;letter-spacing:-1px;margin-bottom:18px"><span style="color:#fff">Fin</span><span style="color:#5B9BF5">Bridge</span></div>
+  <div style="width:140px;height:3px;background:rgba(255,255,255,0.15);border-radius:2px;overflow:hidden">
+    <div style="width:40%;height:100%;background:#5B9BF5;border-radius:2px;animation:bootslide 1s ease-in-out infinite"></div>
   </div>
+  <div style="color:#93C5FD;font-size:12px;margin-top:16px;letter-spacing:0.5px">Loading…</div>
 </div>
+<div id="root"></div>
 <style>@keyframes bootslide{0%{margin-left:-40%}100%{margin-left:140%}}</style>
 <script src="js/data.js"></script>
 <script type="text/babel">
@@ -1697,6 +1696,17 @@ const App=()=>{
 };
 
 ReactDOM.render(<App/>,document.getElementById('root'));
+// Remove the boot splash once the app has mounted (so it can never linger and block clicks)
+(function(){
+  var s=document.getElementById('boot-splash');
+  if(s){
+    requestAnimationFrame(function(){
+      s.style.transition='opacity 0.25s ease';
+      s.style.opacity='0';
+      setTimeout(function(){ if(s&&s.parentNode) s.parentNode.removeChild(s); },280);
+    });
+  }
+})();
 </script>
 </body>
 </html>
