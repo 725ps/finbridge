@@ -746,13 +746,29 @@ const subProcessFlow = () => {
 
 // Generate sub-process statuses for any entity
 const genSPS = es => {
+  // subProcessStatuses is now always present and derived from the entity's task states (single source of truth)
   if (es.subProcessStatuses) return es.subProcessStatuses;
+  // Fallback (should not happen): everything waiting
   return D.processTemplates[0].subProcesses.map(sp => ({
     id: sp.id,
-    status: es.status === "closed" ? "completed" : sp.phase <= 1 ? "completed" : sp.phase <= 2 ? es.pct > 40 ? "in_progress" : "not_started" : "waiting",
-    pct: es.status === "closed" ? 100 : sp.phase <= 1 ? 100 : sp.phase <= 2 ? Math.max(0, Math.round((es.pct - 20) * 2)) : 0
+    status: "waiting",
+    pct: 0
   }));
 };
+// Per-entity task status (single source of truth). Falls back to deriving from sub-process status if absent.
+const entityTaskStatus = (es, taskId) => {
+  if (es.taskStates && es.taskStates[taskId]) return es.taskStates[taskId];
+  return null;
+};
+const colLabelFor = d => ({
+  1: "Day 1",
+  2: "Day 2",
+  3: "Day 3",
+  4: "Day 4",
+  5: "Day 5",
+  6: "Q Add-ons",
+  7: "Annual Add-ons"
+})[d] || `Day ${d}`;
 
 // === SIDEBAR ===
 const NAV_BY_ROLE = {
@@ -1370,7 +1386,9 @@ const Overview = ({
 // === ENTITY DETAIL ===
 const EntDetail = ({
   eid,
-  nav
+  nav,
+  closeDay = 3,
+  targetDays = 5
 }) => {
   const e = getEnt(eid),
     es = getES(eid);
@@ -1420,7 +1438,7 @@ const EntDetail = ({
       fontSize: 13,
       color: "var(--gray)"
     }
-  }, cf(e.country), " ", D.countries[e.country]?.currency, " \u2022 Day 3 of ", e.close_target_days, " \u2022 ", es.tasksDone, "/", es.tasksTotal, " tasks")), /*#__PURE__*/React.createElement(Pill, {
+  }, cf(e.country), " ", D.countries[e.country]?.currency, " \u2022 ", es.status === "closed" ? "Closed" : `Day ${closeDay} of ${targetDays}`, " \u2022 ", es.tasksDone, "/", es.tasksTotal, " tasks")), /*#__PURE__*/React.createElement(Pill, {
     s: es.status
   })), /*#__PURE__*/React.createElement("div", {
     className: "card",
@@ -1506,6 +1524,7 @@ const EntDetail = ({
     },
     onClick: () => nav("task", {
       eid,
+      spId: es.blocker.subProcess,
       blocker: es.blocker
     })
   }, "View Details & Resolution \u2192")), /*#__PURE__*/React.createElement("div", {
@@ -1521,12 +1540,14 @@ const EntDetail = ({
     return /*#__PURE__*/React.createElement("div", {
       key: sp.id,
       className: "spr",
-      onClick: () => {
-        if (sp.status === "blocked" && es.blocker) nav("task", {
-          eid,
-          blocker: es.blocker
-        });
-      }
+      style: {
+        cursor: "pointer"
+      },
+      onClick: () => nav("task", {
+        eid,
+        spId: sp.id,
+        blocker: sp.status === "blocked" ? es.blocker : null
+      })
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         width: 8,
@@ -1557,7 +1578,13 @@ const EntDetail = ({
       h: 4
     })), /*#__PURE__*/React.createElement(Pill, {
       s: sp.status
-    }));
+    }), /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: "var(--muted)",
+        fontSize: 11,
+        marginLeft: 6
+      }
+    }, "\u2192"));
   })), e.locations && e.locations.length > 0 && /*#__PURE__*/React.createElement("div", {
     className: "card"
   }, /*#__PURE__*/React.createElement("div", {
@@ -1614,26 +1641,47 @@ const EntDetail = ({
 // === TASK DETAIL ===
 const TaskDetail = ({
   eid,
+  spId,
   blocker
 }) => {
   const e = getEnt(eid);
+  const es = getES(eid);
+  const sp = D.processTemplates[0].subProcesses.find(s => s.id === spId);
+  // Fallback: if no spId but a blocker was passed (legacy), derive spId from blocker
+  const effectiveSp = sp || (blocker ? D.processTemplates[0].subProcesses.find(s => s.id === blocker.subProcess) : null);
+  if (!effectiveSp) return /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: 40,
+      textAlign: "center",
+      color: "var(--muted)"
+    }
+  }, "Sub-process not found");
+  const tasks = effectiveSp.tasks || [];
+  const stOf = tid => es?.taskStates?.[tid] || "not_started";
+  const SLABEL = {
+    completed: "Completed",
+    in_progress: "In Progress",
+    blocked: "Blocked",
+    waiting: "Waiting",
+    not_started: "Not Started"
+  };
   return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 18,
       fontWeight: 700,
       marginBottom: 4
     }
-  }, blocker.task), /*#__PURE__*/React.createElement("div", {
+  }, effectiveSp.name), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
       color: "var(--gray)",
       marginBottom: 20
     }
-  }, "Entity: ", bn(e?.brand), " ", cn(e?.country)), /*#__PURE__*/React.createElement("div", {
+  }, "Entity: ", bn(e?.brand), " ", cn(e?.country), " \u2022 System: ", effectiveSp.systemId, " \u2022 ", tasks.length, " task", tasks.length !== 1 ? "s" : ""), blocker && /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
       borderColor: "var(--red-bdr)",
-      marginBottom: 12
+      marginBottom: 16
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -1659,9 +1707,9 @@ const TaskDetail = ({
     s: "blocked"
   })), /*#__PURE__*/React.createElement("div", {
     style: {
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr 1fr",
-      gap: 12,
+      display: "flex",
+      gap: 18,
+      flexWrap: "wrap",
       marginBottom: 16,
       fontSize: 13
     }
@@ -1674,15 +1722,6 @@ const TaskDetail = ({
       fontWeight: 600
     }
   }, blocker.resolutionAssignee?.split("(")[0])), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: "var(--muted)"
-    }
-  }, "Due: "), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontWeight: 600,
-      color: "var(--red)"
-    }
-  }, "Day 3 (overdue)")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
     style: {
       color: "var(--muted)"
     }
@@ -1733,9 +1772,85 @@ const TaskDetail = ({
   }, "Assign to: ", blocker.resolutionAssignee)), blocker.blocks && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12,
-      color: "var(--gray)"
+      color: "var(--gray)",
+      marginTop: 8
     }
-  }, /*#__PURE__*/React.createElement("strong", null, "Blocks: "), blocker.blocks.join(", "))));
+  }, /*#__PURE__*/React.createElement("strong", null, "Blocks: "), blocker.blocks.join(", "))), /*#__PURE__*/React.createElement("div", {
+    className: "card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "card-hd"
+  }, "Tasks"), tasks.map(t => {
+    const st = stOf(t.id);
+    const en = enrich(t.id);
+    const blocks = tasksBlockedBy(t.id);
+    return /*#__PURE__*/React.createElement("div", {
+      key: t.id,
+      style: {
+        padding: "12px 0",
+        borderBottom: "1px solid #F3F4F6"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 10
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: 8,
+        height: 8,
+        borderRadius: "50%",
+        background: SC[st] || "#D1D5DB",
+        flexShrink: 0
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        fontSize: 13,
+        fontWeight: 600
+      }
+    }, t.name), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 11,
+        fontWeight: 600,
+        padding: "2px 10px",
+        borderRadius: 20,
+        background: (SC[st] || "#9CA3AF") + "1A",
+        color: SC[st] || "#6B7280"
+      }
+    }, SLABEL[st])), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: "var(--muted)",
+        marginTop: 4,
+        marginLeft: 18
+      }
+    }, colLabelFor(t.targetDay), " \u2022 ", t.effortHrs, "h", t.dependsOn?.length > 0 && /*#__PURE__*/React.createElement("span", null, " \u2022 depends on: ", t.dependsOn.map(taskNameById).join(", ")), blocks.length > 0 && /*#__PURE__*/React.createElement("span", null, " \u2022 blocks: ", blocks.join(", "))), en && /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 6,
+        marginLeft: 18,
+        padding: "8px 10px",
+        background: "var(--gray-bg)",
+        borderRadius: 6,
+        fontSize: 11
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontWeight: 700,
+        color: "var(--blue)"
+      }
+    }, "reads"), " ", en.reads.map(r => r.sys).join(", "), " \u2192 ", /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontWeight: 700,
+        color: "var(--amber)"
+      }
+    }, "does"), " ", en.transform, " \u2192 ", /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontWeight: 700,
+        color: "var(--green)"
+      }
+    }, "writes"), " ", en.writes.map(x => x.sys).join(", ")));
+  })));
 };
 
 // === LOCATION DETAIL ===
@@ -4925,9 +5040,12 @@ const App = () => {
         }
       });
     }
-    if (view === "task") items.push({
-      l: vd.blocker?.task || "Task"
-    });
+    if (view === "task") {
+      const sp = vd.spId && D.processTemplates[0].subProcesses.find(s => s.id === vd.spId);
+      items.push({
+        l: sp ? sp.name : vd.blocker?.task || "Tasks"
+      });
+    }
     if (view === "loc") items.push({
       l: vd.loc?.name || "Location"
     });
@@ -5040,7 +5158,9 @@ const App = () => {
       }
     }, "\u25CF ", statusChip.t)), /*#__PURE__*/React.createElement(EntDetail, {
       eid: "TOY-UAE",
-      nav: nav
+      nav: nav,
+      closeDay: period.currentDay,
+      targetDays: 5
     }));
     // Group Controller → consolidation readiness
     if (rid === "group") return /*#__PURE__*/React.createElement(ConsolidationDashboard, {
@@ -5057,6 +5177,7 @@ const App = () => {
         const es = getES(id);
         nav("task", {
           eid: id,
+          spId: es.blocker?.subProcess,
           blocker: es.blocker
         });
       }
@@ -5172,6 +5293,7 @@ const App = () => {
         const es = getES(id);
         nav("task", {
           eid: id,
+          spId: es.blocker?.subProcess,
           blocker: es.blocker
         });
       },
@@ -5179,13 +5301,16 @@ const App = () => {
       closed: period.status === "closed",
       periodId: period.id,
       periodType: "monthly",
-      statusNote: period.status === "closed" ? period.closeDays < 5 ? `Closed Day ${period.closeDays} · 1 Day Early` : `Closed Day ${period.closeDays} · On Target` : "Live · Day 3"
+      statusNote: period.status === "closed" ? period.closeDays < 5 ? `Closed Day ${period.closeDays} · 1 Day Early` : `Closed Day ${period.closeDays} · On Target` : `Live · Day ${period.currentDay}`
     }));
   })(), tab === "cmd" && view === "entity" && /*#__PURE__*/React.createElement(EntDetail, {
     eid: vd.eid,
-    nav: nav
+    nav: nav,
+    closeDay: period.currentDay,
+    targetDays: 5
   }), tab === "cmd" && view === "task" && /*#__PURE__*/React.createElement(TaskDetail, {
     eid: vd.eid,
+    spId: vd.spId,
     blocker: vd.blocker
   }), tab === "cmd" && view === "loc" && /*#__PURE__*/React.createElement(LocDetail, {
     loc: vd.loc,
