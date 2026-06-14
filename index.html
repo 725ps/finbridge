@@ -351,6 +351,33 @@ const enrich=tid=>D.taskEnrichment?.[tid];
 const tasksAssignedTo=personId=>allTaskTemplates().filter(t=>enrich(t.id)?.assignee===personId);
 const tasksUsingSystem=sysId=>allTaskTemplates().filter(t=>{const e=enrich(t.id);if(!e)return false;return[...(e.reads||[]),...(e.writes||[])].some(x=>x.sys===sysId);});
 
+// === SHARED DEPENDENCY / STAGE LOGIC (used by entity detail, DAG, and Config so they never drift) ===
+// A task's day is its targetDay; the dependency BASIS explains why it sits there.
+const taskById=id=>allTaskTemplates().find(t=>t.id===id);
+const depBasis=t=>{
+  const deps=(t.dependsOn||[]);
+  if(deps.length===0)return{type:"immediate",text:"Can start immediately"};
+  const day=t.targetDay||1;
+  const sameDay=deps.filter(d=>{const x=taskById(d);return x&&(x.targetDay||1)===day;}).map(taskNameById);
+  const prior=deps.filter(d=>{const x=taskById(d);return x&&(x.targetDay||1)<day;}).map(taskNameById);
+  const parts=[];
+  if(prior.length)parts.push("after earlier-day work");
+  if(sameDay.length)parts.push("after "+sameDay.join(", "));
+  return{type:"dependent",text:parts.join(" + "),sameDay,prior};
+};
+// Sub-process level flow: SP-A → SP-B if any task in B depends on a task in A.
+const subProcessFlow=()=>{
+  const sps=D.processTemplates[0].subProcesses;
+  const taskToSP={};
+  sps.forEach(sp=>(sp.tasks||[]).forEach(t=>taskToSP[t.id]=sp.id));
+  const edges={}; // spId -> Set of spIds it depends on
+  sps.forEach(sp=>{(sp.tasks||[]).forEach(t=>{(t.dependsOn||[]).forEach(d=>{
+    const fromSP=taskToSP[d];
+    if(fromSP&&fromSP!==sp.id){(edges[sp.id]=edges[sp.id]||new Set()).add(fromSP);}
+  })})});
+  return{sps,edges};
+};
+
 // Generate sub-process statuses for any entity
 const genSPS=(es)=>{
   if(es.subProcessStatuses)return es.subProcessStatuses;
@@ -555,9 +582,13 @@ const EntDetail=({eid,nav})=>{
   const e=getEnt(eid),es=getES(eid);
   if(!e||!es)return<div style={{padding:40,textAlign:"center",color:"var(--muted)"}}>Entity not found</div>;
   const sps=genSPS(es);
-  const p1=sps.filter(s=>getSP(s.id)?.phase===1),p2=sps.filter(s=>getSP(s.id)?.phase===2),p3=sps.filter(s=>getSP(s.id)?.phase===3),p4=sps.filter(s=>getSP(s.id)?.phase===4);
-  const phasePct=(arr)=>arr.length?Math.round(arr.reduce((a,s)=>a+s.pct,0)/arr.length):0;
-  const phases=[{n:1,l:"Sub-Ledger Close",p:phasePct(p1)},{n:2,l:"General Ledger Close",p:phasePct(p2)},{n:3,l:"Entity Close",p:phasePct(p3)},{n:4,l:"Consolidation",p:phasePct(p4)}];
+  // Group sub-processes by the day their earliest task can start (dependency-driven, not hand-assigned phases)
+  const spById=id=>D.processTemplates[0].subProcesses.find(s=>s.id===id);
+  const spStartDay=sp=>{const t=spById(sp.id);if(!t||!t.tasks?.length)return 1;return Math.min(...t.tasks.map(x=>x.targetDay||1));};
+  const stageGroups={};
+  sps.forEach(s=>{const d=spStartDay(s);(stageGroups[d]=stageGroups[d]||[]).push(s);});
+  const stageDays=Object.keys(stageGroups).map(Number).sort((a,b)=>a-b);
+  const stagePct=arr=>arr.length?Math.round(arr.reduce((a,s)=>a+s.pct,0)/arr.length):0;
 
   return(<div>
     <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:20}}>
@@ -568,13 +599,16 @@ const EntDetail=({eid,nav})=>{
     </div>
 
     <div className="card" style={{marginBottom:16}}>
-      <div className="card-hd">Phase Progress</div>
-      {phases.map(p=><div key={p.n} style={{display:"flex",alignItems:"center",gap:12,marginBottom:8}}>
-        <div style={{width:24,height:24,borderRadius:"50%",background:p.p>=100?"var(--green)":p.p>0?"var(--blue)":"#E5E7EB",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,flexShrink:0}}>{p.n}</div>
-        <div style={{width:140,fontSize:13,fontWeight:500,color:"var(--text2)"}}>{p.l}</div>
-        <div style={{flex:1}}><PBar pct={p.p}/></div>
-        <div style={{width:40,textAlign:"right",fontSize:12,fontWeight:600,color:p.p>=100?"var(--green)":p.p>0?"var(--blue)":"#D1D5DB"}}>{p.p}%</div>
-      </div>)}
+      <div className="card-hd">Close Progress by Stage</div>
+      <div style={{fontSize:12,color:"var(--gray)",marginBottom:12}}>Stages are driven by dependencies: work that can start immediately runs first; later stages unlock as their inputs complete.</div>
+      {stageDays.map(d=>{const grp=stageGroups[d];const pct=stagePct(grp);return(
+        <div key={d} style={{display:"flex",alignItems:"center",gap:12,marginBottom:8}}>
+          <div style={{width:60,fontSize:11,fontWeight:700,color:"var(--blue)",background:"var(--blue-bg)",borderRadius:4,padding:"3px 6px",textAlign:"center",flexShrink:0}}>Day {d}</div>
+          <div style={{width:200,fontSize:12,color:"var(--text2)"}}>{grp.map(s=>spById(s.id)?.name).join(", ")}</div>
+          <div style={{flex:1}}><PBar pct={pct}/></div>
+          <div style={{width:40,textAlign:"right",fontSize:12,fontWeight:600,color:pct>=100?"var(--green)":pct>0?"var(--blue)":"#D1D5DB"}}>{pct}%</div>
+        </div>
+      )})}
     </div>
 
     {es.blocker&&<div className="blocker">
@@ -842,6 +876,9 @@ const Flow=({period,roleId})=>{
 // === PROCESS DAG ===
 const DAG=({period})=>{
   const isMobile=useIsMobile();
+  const[dagView,setDagView]=useState("task"); // "task" | "subprocess"
+  const[selTask,setSelTask]=useState(null);
+  const taskDetailRef=React.useRef(null);
   const ptype=period?.type||"monthly";
   const isLive=period?.status==="active";
   const isClosed=period?.status==="closed"||period?.status==="completed";
@@ -875,29 +912,107 @@ const DAG=({period})=>{
 
   const subtitle=ptype==="monthly"?"Monthly Close Template":ptype==="quarterly"?"Quarterly Close = Monthly tasks + quarterly add-ons (provisions, compliance, board, forecast)":"Annual Close = Quarterly tasks + annual add-ons (audit, statutory, tax, budget)";
 
+  const selectTask=t=>{
+    const opening=!selTask||selTask.id!==t.id;
+    setSelTask(opening?t:null);
+    if(opening){setTimeout(()=>{if(taskDetailRef.current){const top=taskDetailRef.current.getBoundingClientRect().top+window.scrollY-70;window.scrollTo({top,behavior:"smooth"});}},60);}
+  };
+
   return(<div>
     <div style={{fontSize:22,fontWeight:800,marginBottom:4}}>Process Dependency Graph</div>
-    <div style={{fontSize:13,color:"var(--gray)",marginBottom:20}}>{period?.label} • {subtitle}</div>
-    <div className="card" style={isMobile?{}:{overflowX:"auto"}}>
-      <div style={isMobile?{padding:"8px 0"}:{display:"flex",gap:16,minWidth:dayCols.length*170,padding:"8px 0"}}>
-        {dayCols.map(day=><div key={day} style={isMobile?{marginBottom:18}:{flex:1,minWidth:155}}>
-          <div style={{fontSize:11,fontWeight:700,color:day>=6?"var(--amber)":"var(--blue)",marginBottom:10,textAlign:isMobile?"left":"center",padding:"4px 8px",background:day>=6?"var(--amber-bg)":"var(--blue-bg)",borderRadius:4}}>{colLabels[day]}{isMobile?` (${(cols[day]||[]).length})`:""}</div>
-          {(cols[day]||[]).map(t=>{const st=statusFor(t);return(
-            <div key={t.id} style={{background:sColor(st)+"1A",border:`1.5px solid ${sColor(st)}`,borderRadius:8,padding:"8px 10px",marginBottom:6,fontSize:11}}>
-              <div style={{fontWeight:700,color:"var(--text)",marginBottom:2}}>{t.name}</div>
-              <div style={{color:"var(--muted)",fontSize:10}}>{t.ownerRole} • {t.effortHrs}h</div>
-              <div style={{display:"flex",alignItems:"center",gap:4,marginTop:4}}>
-                <div style={{width:6,height:6,borderRadius:"50%",background:sColor(st)}}/>
-                <span style={{fontSize:10,fontWeight:600,color:sColor(st)}}>{SL[st]}</span>
-              </div>
-              {t.dependsOn&&t.dependsOn.length>0&&<div style={{fontSize:9,color:"var(--muted)",marginTop:3}}>← {t.dependsOn.join(", ")}</div>}
-            </div>
-          )})}
-        </div>)}
-      </div>
+    <div style={{fontSize:13,color:"var(--gray)",marginBottom:16}}>{period?.label} • {subtitle}</div>
+
+    {/* View toggle: sub-process flow vs task schedule */}
+    <div style={{display:"inline-flex",background:"var(--gray-bg)",borderRadius:8,padding:3,marginBottom:18}}>
+      <button onClick={()=>setDagView("subprocess")} style={{padding:"6px 14px",border:"none",borderRadius:6,fontSize:12,fontWeight:600,cursor:"pointer",background:dagView==="subprocess"?"var(--white)":"transparent",color:dagView==="subprocess"?"var(--navy)":"var(--gray)",boxShadow:dagView==="subprocess"?"var(--shadow)":"none"}}>Sub-process flow</button>
+      <button onClick={()=>setDagView("task")} style={{padding:"6px 14px",border:"none",borderRadius:6,fontSize:12,fontWeight:600,cursor:"pointer",background:dagView==="task"?"var(--white)":"transparent",color:dagView==="task"?"var(--navy)":"var(--gray)",boxShadow:dagView==="task"?"var(--shadow)":"none"}}>Task schedule</button>
     </div>
-    {(ptype==="quarterly"||ptype==="annual")&&<div className="info" style={{marginTop:16}}>
-      <strong>Composition:</strong> The {ptype==="quarterly"?"Q Add-ons":"add-on"} columns depend on the underlying monthly closes completing first. Quarterly add-on tasks unlock only after the 3rd monthly close (June) signs off{ptype==="annual"?", and annual add-ons unlock after Q4 completes":""}.
+
+    {/* SUB-PROCESS FLOW VIEW */}
+    {dagView==="subprocess"&&(()=>{
+      const{sps,edges}=subProcessFlow();
+      const spEarliestDay=sp=>Math.min(...(sp.tasks||[]).map(t=>t.targetDay||1));
+      const ordered=[...sps].sort((a,b)=>spEarliestDay(a)-spEarliestDay(b));
+      const bands={};
+      ordered.forEach(sp=>{const d=spEarliestDay(sp);(bands[d]=bands[d]||[]).push(sp);});
+      const bandDays=Object.keys(bands).map(Number).sort((a,b)=>a-b);
+      return(
+      <div className="card">
+        <div className="card-hd">How the sub-processes connect</div>
+        <div style={{fontSize:12,color:"var(--gray)",marginBottom:14}}>Derived automatically from task dependencies that cross sub-process boundaries. A sub-process can begin once the ones feeding it have completed. Switch to "Task schedule" for the task-by-task detail.</div>
+        <div style={{display:"flex",flexDirection:isMobile?"column":"row",alignItems:"stretch",gap:8,overflowX:"auto",paddingBottom:4}}>
+          {bandDays.map((d,bi)=>(
+            <React.Fragment key={d}>
+              <div style={{display:"flex",flexDirection:"column",gap:8,minWidth:isMobile?"auto":150,flex:1}}>
+                <div style={{fontSize:10,fontWeight:700,color:"var(--blue)",textAlign:"center",background:"var(--blue-bg)",borderRadius:4,padding:"3px"}}>Stage {bi+1}{isMobile?` — starts Day ${d}`:""}</div>
+                {bands[d].map(sp=>{
+                  const feeders=[...(edges[sp.id]||[])].map(id=>sps.find(s=>s.id===id)?.name).filter(Boolean);
+                  return(
+                  <div key={sp.id} style={{border:"1px solid var(--gray-bdr)",borderRadius:8,padding:"8px 10px",background:"var(--white)"}}>
+                    <div style={{fontSize:12,fontWeight:700,color:"var(--text)"}}>{sp.name}</div>
+                    <div style={{fontSize:9,color:"var(--muted)",marginTop:2}}>{(sp.tasks||[]).length} tasks · {sn(sp.systemId)}</div>
+                    {feeders.length>0&&<div style={{fontSize:9,color:"var(--blue)",marginTop:3}}>← needs: {feeders.join(", ")}</div>}
+                  </div>
+                )})}
+              </div>
+              {!isMobile&&bi<bandDays.length-1&&<div style={{display:"flex",alignItems:"center",color:"#CBD5E1",fontSize:18,fontWeight:700}}>→</div>}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+      );
+    })()}
+
+    {/* TASK SCHEDULE VIEW */}
+    {dagView==="task"&&<div>
+      <div style={{fontSize:12,color:"var(--gray)",marginBottom:12}}>The day each task lands on is computed from its dependencies — work with no prerequisites starts Day 1, dependent work flows to later days. Tap any task for detail.</div>
+      <div className="card" style={isMobile?{}:{overflowX:"auto"}}>
+        <div style={isMobile?{padding:"8px 0"}:{display:"flex",gap:16,minWidth:dayCols.length*170,padding:"8px 0"}}>
+          {dayCols.map(day=><div key={day} style={isMobile?{marginBottom:18}:{flex:1,minWidth:155}}>
+            <div style={{fontSize:11,fontWeight:700,color:day>=6?"var(--amber)":"var(--blue)",marginBottom:10,textAlign:isMobile?"left":"center",padding:"4px 8px",background:day>=6?"var(--amber-bg)":"var(--blue-bg)",borderRadius:4}}>{colLabels[day]}{isMobile?` (${(cols[day]||[]).length})`:""}</div>
+            {(cols[day]||[]).map(t=>{const st=statusFor(t);const isSel=selTask&&selTask.id===t.id;return(
+              <div key={t.id} onClick={()=>selectTask(t)} style={{background:sColor(st)+"1A",border:`1.5px solid ${isSel?"var(--navy)":sColor(st)}`,borderRadius:8,padding:"8px 10px",marginBottom:6,fontSize:11,cursor:"pointer",boxShadow:isSel?"0 2px 12px rgba(0,0,0,0.12)":"none"}}>
+                <div style={{fontWeight:700,color:"var(--text)",marginBottom:2}}>{t.name}</div>
+                <div style={{color:"var(--muted)",fontSize:10}}>{t.ownerRole} • {t.effortHrs}h</div>
+                <div style={{display:"flex",alignItems:"center",gap:4,marginTop:4}}>
+                  <div style={{width:6,height:6,borderRadius:"50%",background:sColor(st)}}/>
+                  <span style={{fontSize:10,fontWeight:600,color:sColor(st)}}>{SL[st]}</span>
+                </div>
+                {t.dependsOn&&t.dependsOn.length>0&&<div style={{fontSize:9,color:"var(--muted)",marginTop:3}}>← {t.dependsOn.map(taskNameById).join(", ")}</div>}
+              </div>
+            )})}
+          </div>)}
+        </div>
+      </div>
+      {(ptype==="quarterly"||ptype==="annual")&&<div className="info" style={{marginTop:16}}>
+        <strong>Composition:</strong> The {ptype==="quarterly"?"Q Add-ons":"add-on"} columns depend on the underlying monthly closes completing first. Quarterly add-on tasks unlock only after the 3rd monthly close (June) signs off{ptype==="annual"?", and annual add-ons unlock after Q4 completes":""}.
+      </div>}
+
+      {/* Task detail panel */}
+      {selTask&&(()=>{
+        const t=selTask;const st=statusFor(t);const e=enrich(t.id);
+        const person=e?getPerson(e.assignee):null;
+        const blocks=tasksBlockedBy(t.id);
+        return(<div ref={taskDetailRef} className="card" style={{marginTop:16,borderColor:"var(--navy)"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8,flexWrap:"wrap"}}>
+            <div className="card-hd" style={{margin:0}}>{t.name}</div>
+            <span style={{fontSize:10,fontWeight:600,padding:"2px 10px",borderRadius:20,background:sColor(st)+"1A",color:sColor(st)}}>{SL[st]}</span>
+            <span style={{fontSize:11,color:"var(--muted)",marginLeft:"auto"}}>{t.sp} • {colLabels[t.targetDay||1]} • {t.effortHrs}h</span>
+          </div>
+          <div style={{fontSize:12,marginBottom:6}}><span style={{color:"var(--muted)"}}>Assigned to: </span>{person?<strong>{person.name} <span style={{fontWeight:400,color:"var(--muted)"}}>({person.role})</span></strong>:<span>{t.ownerRole}</span>}</div>
+          <div style={{fontSize:12,marginBottom:6}}><span style={{color:"var(--muted)"}}>Scheduled: </span>{colLabels[t.targetDay||1]} — {depBasis(t).text}</div>
+          <div style={{display:"flex",gap:20,flexWrap:"wrap",fontSize:12,marginBottom:6}}>
+            <div><span style={{color:"var(--muted)"}}>Depends on: </span>{t.dependsOn?.length?t.dependsOn.map(taskNameById).join(", "):<span style={{color:"var(--muted)"}}>Nothing</span>}</div>
+            <div><span style={{color:"var(--muted)"}}>Blocks: </span>{blocks.length?blocks.join(", "):<span style={{color:"var(--muted)"}}>Nothing downstream</span>}</div>
+          </div>
+          {e&&<div style={{marginTop:8,padding:10,background:"var(--gray-bg)",borderRadius:6,fontSize:11}}>
+            <div style={{fontSize:9,fontWeight:700,color:"var(--muted)",letterSpacing:1,marginBottom:6}}>DATA CONTRACT</div>
+            <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{fontSize:10,fontWeight:700,color:"var(--blue)",width:46,flexShrink:0}}>READS</span><span>{e.reads.map((r,i)=><span key={i}>{i>0&&", "}<strong>{r.sys}</strong>: {r.obj}</span>)}</span></div>
+            <div style={{display:"flex",gap:8,marginBottom:4}}><span style={{fontSize:10,fontWeight:700,color:"var(--amber)",width:46,flexShrink:0}}>DOES</span><span>{e.transform}</span></div>
+            <div style={{display:"flex",gap:8}}><span style={{fontSize:10,fontWeight:700,color:"var(--green)",width:46,flexShrink:0}}>WRITES</span><span>{e.writes.map((w,i)=><span key={i}>{i>0&&", "}<strong>{w.sys}</strong>: {w.obj}</span>)}</span></div>
+          </div>}
+        </div>);
+      })()}
     </div>}
   </div>);
 };
@@ -1009,12 +1124,10 @@ const Config=({canEdit})=>{
               <div style={{fontSize:12,color:"var(--gray)"}}>{pt.subProcesses?`${pt.subProcesses.length} sub-processes • ~${pt.subProcesses.reduce((a,sp)=>a+(sp.tasks?.length||0),0)} tasks`:`Extends: ${pt.includesTemplate}`}{pt.targetDays&&` • ${pt.targetDays}-day target`}</div></div>
             {canEdit&&<button className="btn btn-o" style={{padding:"4px 12px",fontSize:11}}>Edit</button>}
           </div>
-          {pt.subProcesses&&[1,2,3,4].map(phase=>{
-            const sps=pt.subProcesses.filter(sp=>sp.phase===phase);
-            if(!sps.length)return null;
-            return(<div key={phase} style={{marginBottom:8}}>
-              <div style={{fontSize:11,fontWeight:700,color:"var(--blue)",marginBottom:4}}>Phase {phase}: {["","Sub-Ledger","GL Close","Entity Close","Consolidation"][phase]}</div>
-              {sps.map(sp=>(
+          {pt.subProcesses&&(()=>{
+            return [<div key="splist" style={{marginBottom:8}}>
+              <div style={{fontSize:11,fontWeight:700,color:"var(--muted)",letterSpacing:0.5,marginBottom:6}}>SUB-PROCESSES ({pt.subProcesses.length})</div>
+              {pt.subProcesses.map(sp=>(
                 <div key={sp.id} style={{marginLeft:16}}>
                   <div style={{display:"flex",alignItems:"center",gap:6,padding:"3px 0",fontSize:12,cursor:"pointer"}} onClick={()=>tog("proc-"+sp.id)}>
                     <span style={{fontSize:9,transform:exp["proc-"+sp.id]?"rotate(90deg)":"none",transition:"transform 0.2s",color:"var(--muted)"}}>▸</span>
@@ -1046,9 +1159,10 @@ const Config=({canEdit})=>{
                           <span style={{color:"var(--muted)",fontSize:9,marginLeft:6}}>(inherited from {sp.name})</span>
                         </div>
                         <div style={{marginBottom:4}}><span style={{color:"var(--muted)"}}>Deliverable: </span>{t.deliverable}</div>
+                        <div style={{marginBottom:4}}><span style={{color:"var(--muted)"}}>Estimated effort: </span>{t.effortHrs}h</div>
                         {/* Dependencies both directions */}
                         <div style={{display:"flex",gap:20,margin:"8px 0",flexWrap:"wrap"}}>
-                          <div><span style={{color:"var(--muted)"}}>Depends on: </span>{t.dependsOn?.length?t.dependsOn.map(taskNameById).join(", "):<span style={{color:"var(--muted)"}}>None (can start Day 1)</span>}</div>
+                          <div><span style={{color:"var(--muted)"}}>Depends on: </span>{t.dependsOn?.length?t.dependsOn.map(taskNameById).join(", "):<span style={{color:"var(--muted)"}}>Nothing (can start immediately)</span>}</div>
                           <div><span style={{color:"var(--muted)"}}>Blocks: </span>{blocks.length?blocks.join(", "):<span style={{color:"var(--muted)"}}>Nothing downstream</span>}</div>
                         </div>
                         {/* Data contract */}
@@ -1073,8 +1187,8 @@ const Config=({canEdit})=>{
                   )})}
                 </div>
               ))}
-            </div>);
-          })}
+            </div>];
+          })()}
           {pt.additionalSubProcesses&&<div style={{marginTop:8}}>
             <div style={{fontSize:11,fontWeight:700,color:"var(--amber)",marginBottom:4}}>Additional Sub-Processes</div>
             {pt.additionalSubProcesses.map(sp=>(
